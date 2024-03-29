@@ -51,10 +51,14 @@ namespace ExifLibrary
         public static int Power(int x, uint y)
         {
             int ret = 1;
+
             while (y != 0)
             {
                 if ((y & 1) == 1)
+                {
                     ret *= x;
+                }
+
                 x *= x;
                 y >>= 1;
             }
@@ -66,10 +70,7 @@ namespace ExifLibrary
         /// </summary>
         /// <param name="y">A number that specifies a power.</param>
         /// <returns></returns>
-        public static int Power2(uint y)
-        {
-            return 1 << (int)y;
-        }
+        public static int Power2(uint y) => 1 << (int)y;
 
         /// <summary>
         /// Represents a generic rational number represented by 32-bit signed numerator and denominator.
@@ -95,11 +96,13 @@ namespace ExifLibrary
             private Fraction32(int numerator, int denominator, double error)
             {
                 mIsNegative = false;
+
                 if (numerator < 0)
                 {
                     numerator = -numerator;
                     mIsNegative = !mIsNegative;
                 }
+
                 if (denominator < 0)
                 {
                     denominator = -denominator;
@@ -111,54 +114,30 @@ namespace ExifLibrary
                 mError = error;
 
                 if (mDenominator != 0)
+                {
                     Reduce(ref mNumerator, ref mDenominator);
+                }
             }
 
-            public Fraction32(int numerator, int denominator)
-                            : this(numerator, denominator, 0)
-            {
-                ;
-            }
+            public Fraction32(int numerator, int denominator) : this(numerator, denominator, 0)
+            { }
 
-            public Fraction32(int numerator)
-                            : this(numerator, (int)1)
-            {
-                ;
-            }
+            public Fraction32(int numerator) : this(numerator, (int)1) { }
 
-            public Fraction32(Fraction32 f)
-                            : this(f.Numerator, f.Denominator, f.Error)
-            {
-                ;
-            }
+            public Fraction32(Fraction32 f) : this(f.Numerator, f.Denominator, f.Error) { }
 
-            public Fraction32(float value)
-                            : this((double)value)
-            {
-                ;
-            }
+            public Fraction32(float value) : this((double)value) { }
 
-            public Fraction32(double value)
-                            : this(FromDouble(value))
-            {
-                ;
-            }
+            public Fraction32(double value) : this(FromDouble(value)) { }
 
-            public Fraction32(string s)
-                            : this(FromString(s))
-            {
-                ;
-            }
+            public Fraction32(string s) : this(FromString(s)) { }
 
             /// <summary>
             /// Gets or sets the denominator.
             /// </summary>
             public int Denominator
             {
-                get
-                {
-                    return ((int)mDenominator);
-                }
+                get => (int)mDenominator;
                 set
                 {
                     mDenominator = System.Math.Abs(value);
@@ -171,10 +150,7 @@ namespace ExifLibrary
             /// </summary>
             public double Error
             {
-                get
-                {
-                    return mError;
-                }
+                get => mError;
             }
 
             /// <summary>
@@ -182,14 +158,8 @@ namespace ExifLibrary
             /// </summary>
             public bool IsNegative
             {
-                get
-                {
-                    return mIsNegative;
-                }
-                set
-                {
-                    mIsNegative = value;
-                }
+                get => mIsNegative;
+                set { mIsNegative = value; }
             }
 
             /// <summary>
@@ -197,10 +167,7 @@ namespace ExifLibrary
             /// </summary>
             public int Numerator
             {
-                get
-                {
-                    return (mIsNegative ? -1 : 1) * mNumerator;
-                }
+                get => (mIsNegative ? -1 : 1) * mNumerator;
                 set
                 {
                     if (value < 0)
@@ -225,15 +192,24 @@ namespace ExifLibrary
             private static Fraction32 FromDouble(double value)
             {
                 if (double.IsNaN(value))
+                {
                     return Fraction32.NaN;
+                }
                 else if (double.IsNegativeInfinity(value))
+                {
                     return Fraction32.NegativeInfinity;
+                }
                 else if (double.IsPositiveInfinity(value))
+                {
                     return Fraction32.PositiveInfinity;
+                }
 
                 bool isneg = (value < 0);
+
                 if (isneg)
+                {
                     value = -value;
+                }
 
                 double f = value;
                 double forg = f;
@@ -244,26 +220,45 @@ namespace ExifLibrary
                 double lasterr = 1.0;
                 int a = 0;
                 int currIteration = 0;
+
                 while (true)
                 {
                     if (++currIteration > MaximumIterations)
+                    {
                         break;
+                    }
 
                     a = (int)Math.Floor(f);
                     f = f - (double)a;
+
                     if (Math.Abs(f) < double.Epsilon)
+                    {
                         break;
+                    }
+
                     f = 1.0 / f;
+
                     if (double.IsInfinity(f))
+                    {
                         break;
+                    }
+
                     int cnum = num * a + lnum;
                     int cden = den * a + lden;
+
                     if (Math.Abs((double)cnum / (double)cden - forg) < double.Epsilon)
+                    {
                         break;
+                    }
+
                     double err = ((double)cnum / (double)cden - (double)num / (double)den) / ((double)num / (double)den);
+
                     // Are we converging?
                     if (err >= lasterr)
+                    {
                         break;
+                    }
+
                     lasterr = err;
                     lnum = num;
                     lden = den;
@@ -272,9 +267,13 @@ namespace ExifLibrary
                 }
 
                 if (den > 0)
+                {
                     lasterr = value - ((double)num / (double)den);
+                }
                 else
+                {
                     lasterr = double.PositiveInfinity;
+                }
 
                 return new Fraction32((isneg ? -1 : 1) * num, den, lasterr);
             }
@@ -290,7 +289,9 @@ namespace ExifLibrary
             private static Fraction32 FromString(string s)
             {
                 if (s == null)
+                {
                     throw new ArgumentNullException("s");
+                }
 
                 string[] sa = s.Split('/');
                 int numerator = 1;
@@ -316,7 +317,9 @@ namespace ExifLibrary
                     denominator = int.Parse(sa[1]);
                 }
                 else
+                {
                     throw new FormatException("The input string must be formatted as n/d where n and d are integers");
+                }
 
                 return new Fraction32(numerator, denominator);
             }
@@ -330,36 +333,28 @@ namespace ExifLibrary
             private static void Reduce(ref int numerator, ref int denominator)
             {
                 uint gcd = MathEx.GCD((uint)numerator, (uint)denominator);
+
                 if (gcd == 0)
+                {
                     gcd = 1;
+                }
+
                 numerator = numerator / (int)gcd;
                 denominator = denominator / (int)gcd;
             }
 
-            public static explicit operator double(Fraction32 f)
-            {
-                return ((double)f.Numerator) / ((double)f.Denominator);
-            }
+            public static explicit operator double(Fraction32 f) => ((double)f.Numerator) / ((double)f.Denominator);
 
-            public static explicit operator float(Fraction32 f)
-            {
-                return ((float)f.Numerator) / ((float)f.Denominator);
-            }
+            public static explicit operator float(Fraction32 f) => ((float)f.Numerator) / ((float)f.Denominator);
 
-            public static explicit operator int(Fraction32 f)
-            {
-                return f.Numerator / f.Denominator;
-            }
+            public static explicit operator int(Fraction32 f) => ((int)f.Numerator) / ((int)f.Denominator);
 
             /// <summary>
             /// Returns the multiplicative inverse of a given value.
             /// </summary>
             /// <param name="f">A fraction.</param>
             /// <returns>Multiplicative inverse of f.</returns>
-            public static Fraction32 Inverse(Fraction32 f)
-            {
-                return new Fraction32(f.Denominator, f.Numerator);
-            }
+            public static Fraction32 Inverse(Fraction32 f) => new Fraction32(f.Denominator, f.Numerator);
 
             /// <summary>
             /// Returns a value indicating whether the specified number evaluates to negative
@@ -367,10 +362,7 @@ namespace ExifLibrary
             /// </summary>
             /// <param name="f">A fraction.</param>
             /// <returns>true if f evaluates to Fraction.NegativeInfinity or Fraction.PositiveInfinity; otherwise, false.</returns>
-            public static bool IsInfinity(Fraction32 f)
-            {
-                return (f.Denominator == 0);
-            }
+            public static bool IsInfinity(Fraction32 f) => (f.Numerator != 0 && f.Denominator == 0);
 
             /// <summary>
             /// Returns a value indicating whether the specified number evaluates to a value
@@ -378,10 +370,7 @@ namespace ExifLibrary
             /// </summary>
             /// <param name="f">A fraction.</param>
             /// <returns>true if f evaluates to Fraction.NaN; otherwise, false.</returns>
-            public static bool IsNan(Fraction32 f)
-            {
-                return (f.Numerator == 0 && f.Denominator == 0);
-            }
+            public static bool IsNan(Fraction32 f) => (f.Numerator == 0 && f.Denominator == 0);
 
             /// <summary>
             /// Returns a value indicating whether the specified number evaluates to negative
@@ -389,10 +378,7 @@ namespace ExifLibrary
             /// </summary>
             /// <param name="f">A fraction.</param>
             /// <returns>true if f evaluates to Fraction.NegativeInfinity; otherwise, false.</returns>
-            public static bool IsNegativeInfinity(Fraction32 f)
-            {
-                return (f.Numerator < 0 && f.Denominator == 0);
-            }
+            public static bool IsNegativeInfinity(Fraction32 f) => (f.Numerator < 0 && f.Denominator == 0);
 
             /// <summary>
             /// Returns a value indicating whether the specified number evaluates to positive
@@ -400,41 +386,20 @@ namespace ExifLibrary
             /// </summary>
             /// <param name="f">A fraction.</param>
             /// <returns>true if f evaluates to Fraction.PositiveInfinity; otherwise, false.</returns>
-            public static bool IsPositiveInfinity(Fraction32 f)
-            {
-                return (f.Numerator > 0 && f.Denominator == 0);
-            }
+            public static bool IsPositiveInfinity(Fraction32 f) => (f.Numerator > 0 && f.Denominator == 0);
 
             // Subtraction
-            public static Fraction32 operator -(Fraction32 f, int n)
-            {
-                return f - new Fraction32(n, 1);
-            }
+            public static Fraction32 operator -(Fraction32 f, int n) => f - new Fraction32(n, 1);
 
-            public static Fraction32 operator -(int n, Fraction32 f)
-            {
-                return new Fraction32(n, 1) - f;
-            }
+            public static Fraction32 operator -(int n, Fraction32 f) => new Fraction32(n, 1) - f;
 
-            public static Fraction32 operator -(Fraction32 f, float n)
-            {
-                return new Fraction32(((float)f) - n);
-            }
+            public static Fraction32 operator -(Fraction32 f, float n) => new Fraction32(((float)f) - n);
 
-            public static Fraction32 operator -(float n, Fraction32 f)
-            {
-                return new Fraction32(n) - f;
-            }
+            public static Fraction32 operator -(float n, Fraction32 f) => new Fraction32(n) - f;
 
-            public static Fraction32 operator -(Fraction32 f, double n)
-            {
-                return new Fraction32(((double)f) - n);
-            }
+            public static Fraction32 operator -(Fraction32 f, double n) => new Fraction32(((double)f) - n);
 
-            public static Fraction32 operator -(double n, Fraction32 f)
-            {
-                return new Fraction32(n) - f;
-            }
+            public static Fraction32 operator -(double n, Fraction32 f) => new Fraction32(n) - f;
 
             public static Fraction32 operator -(Fraction32 f1, Fraction32 f2)
             {
@@ -445,103 +410,46 @@ namespace ExifLibrary
             }
 
             // Decrement
-            public static Fraction32 operator --(Fraction32 f)
-            {
-                return f - new Fraction32(1, 1);
-            }
+            public static Fraction32 operator --(Fraction32 f) => f - new Fraction32(1, 1);
 
-            public static bool operator !=(Fraction32 f1, Fraction32 f2)
-            {
-                return (f1.Numerator != f2.Numerator) || (f1.Denominator != f2.Denominator);
-            }
+            public static bool operator !=(Fraction32 f1, Fraction32 f2) => (f1.Numerator != f2.Numerator) || (f1.Denominator != f2.Denominator);
 
             // Multiplication
-            public static Fraction32 operator *(Fraction32 f, int n)
-            {
-                return new Fraction32(f.Numerator * n, f.Denominator * System.Math.Abs(n));
-            }
+            public static Fraction32 operator *(Fraction32 f, int n) => new Fraction32(f.Numerator * n, f.Denominator * System.Math.Abs(n));
 
-            public static Fraction32 operator *(int n, Fraction32 f)
-            {
-                return f * n;
-            }
+            public static Fraction32 operator *(int n, Fraction32 f) => f * n;
 
-            public static Fraction32 operator *(Fraction32 f, float n)
-            {
-                return new Fraction32(((float)f) * n);
-            }
+            public static Fraction32 operator *(Fraction32 f, float n) => new Fraction32(((float)f) * n);
 
-            public static Fraction32 operator *(float n, Fraction32 f)
-            {
-                return f * n;
-            }
+            public static Fraction32 operator *(float n, Fraction32 f) => f * n;
 
-            public static Fraction32 operator *(Fraction32 f, double n)
-            {
-                return new Fraction32(((double)f) * n);
-            }
+            public static Fraction32 operator *(Fraction32 f, double n) => new Fraction32(((double)f) * n);
 
-            public static Fraction32 operator *(double n, Fraction32 f)
-            {
-                return f * n;
-            }
+            public static Fraction32 operator *(double n, Fraction32 f) => f * n;
 
-            public static Fraction32 operator *(Fraction32 f1, Fraction32 f2)
-            {
-                return new Fraction32(f1.Numerator * f2.Numerator, f1.Denominator * f2.Denominator);
-            }
+            public static Fraction32 operator *(Fraction32 f1, Fraction32 f2) => new Fraction32(f1.Numerator * f2.Numerator, f1.Denominator * f2.Denominator);
 
             // Divison
-            public static Fraction32 operator /(Fraction32 f, int n)
-            {
-                return new Fraction32(f.Numerator / n, f.Denominator / System.Math.Abs(n));
-            }
+            public static Fraction32 operator /(Fraction32 f, int n) => new Fraction32(f.Numerator / n, f.Denominator / System.Math.Abs(n));
 
-            public static Fraction32 operator /(Fraction32 f, float n)
-            {
-                return new Fraction32(((float)f) / n);
-            }
+            public static Fraction32 operator /(Fraction32 f, float n) => new Fraction32(((float)f) / n);
 
-            public static Fraction32 operator /(Fraction32 f, double n)
-            {
-                return new Fraction32(((double)f) / n);
-            }
+            public static Fraction32 operator /(Fraction32 f, double n) => new Fraction32(((double)f) / n);
 
-            public static Fraction32 operator /(Fraction32 f1, Fraction32 f2)
-            {
-                return f1 * Inverse(f2);
-            }
+            public static Fraction32 operator /(Fraction32 f1, Fraction32 f2) => f1 * Inverse(f2);
 
             // Addition
-            public static Fraction32 operator +(Fraction32 f, int n)
-            {
-                return f + new Fraction32(n, 1);
-            }
+            public static Fraction32 operator +(Fraction32 f, int n) => f + new Fraction32(n, 1);
 
-            public static Fraction32 operator +(int n, Fraction32 f)
-            {
-                return f + n;
-            }
+            public static Fraction32 operator +(int n, Fraction32 f) => f + n;
 
-            public static Fraction32 operator +(Fraction32 f, float n)
-            {
-                return new Fraction32(((float)f) + n);
-            }
+            public static Fraction32 operator +(Fraction32 f, float n) => new Fraction32(((float)f) + n);
 
-            public static Fraction32 operator +(float n, Fraction32 f)
-            {
-                return f + n;
-            }
+            public static Fraction32 operator +(float n, Fraction32 f) => f + n;
 
-            public static Fraction32 operator +(Fraction32 f, double n)
-            {
-                return new Fraction32(((double)f) + n);
-            }
+            public static Fraction32 operator +(Fraction32 f, double n) => new Fraction32(((double)f) + n);
 
-            public static Fraction32 operator +(double n, Fraction32 f)
-            {
-                return f + n;
-            }
+            public static Fraction32 operator +(double n, Fraction32 f) => f + n;
 
             public static Fraction32 operator +(Fraction32 f1, Fraction32 f2)
             {
@@ -552,25 +460,13 @@ namespace ExifLibrary
             }
 
             // Increment
-            public static Fraction32 operator ++(Fraction32 f)
-            {
-                return f + new Fraction32(1, 1);
-            }
+            public static Fraction32 operator ++(Fraction32 f) => f + new Fraction32(1, 1);
 
-            public static bool operator <(Fraction32 f1, Fraction32 f2)
-            {
-                return (f1.Numerator * f2.Denominator) < (f2.Numerator * f1.Denominator);
-            }
+            public static bool operator <(Fraction32 f1, Fraction32 f2) => (f1.Numerator * f2.Denominator) < (f2.Numerator * f1.Denominator);
 
-            public static bool operator ==(Fraction32 f1, Fraction32 f2)
-            {
-                return (f1.Numerator == f2.Numerator) && (f1.Denominator == f2.Denominator);
-            }
+            public static bool operator ==(Fraction32 f1, Fraction32 f2) => (f1.Numerator == f2.Numerator) && (f1.Denominator == f2.Denominator);
 
-            public static bool operator >(Fraction32 f1, Fraction32 f2)
-            {
-                return (f1.Numerator * f2.Denominator) > (f2.Numerator * f1.Denominator);
-            }
+            public static bool operator >(Fraction32 f1, Fraction32 f2) => (f1.Numerator * f2.Denominator) > (f2.Numerator * f1.Denominator);
 
             /// <summary>
             /// Converts the string representation of a fraction to a fraction object.
@@ -583,10 +479,7 @@ namespace ExifLibrary
             /// s represents a number less than System.UInt32.MinValue or greater than
             /// System.UInt32.MaxValue.
             /// </exception>
-            public static Fraction32 Parse(string s)
-            {
-                return FromString(s);
-            }
+            public static Fraction32 Parse(string s) => FromString(s);
 
             /// <summary>
             /// Converts the string representation of a fraction to a fraction object.
@@ -623,7 +516,9 @@ namespace ExifLibrary
             public int CompareTo(object obj)
             {
                 if (!(obj is Fraction32))
+                {
                     throw new ArgumentException("obj must be of type Fraction", "obj");
+                }
 
                 return CompareTo((Fraction32)obj);
             }
@@ -642,9 +537,13 @@ namespace ExifLibrary
             public int CompareTo(Fraction32 obj)
             {
                 if (this < obj)
+                {
                     return -1;
+                }
                 else if (this > obj)
+                {
                     return 1;
+                }
                 return 0;
             }
 
@@ -657,12 +556,18 @@ namespace ExifLibrary
             public override bool Equals(object obj)
             {
                 if (obj == null)
+                {
                     return false;
+                }
 
                 if (obj is Fraction32)
+                {
                     return Equals((Fraction32)obj);
+                }
                 else
+                {
                     return false;
+                }
             }
 
             /// <summary>
@@ -671,19 +576,13 @@ namespace ExifLibrary
             /// <param name="obj">Another fraction object to compare to.</param>
             /// <returns>true if obj and this instance represent the same value;
             /// otherwise, false.</returns>
-            public bool Equals(Fraction32 obj)
-            {
-                return (mIsNegative == obj.IsNegative) && (mNumerator == obj.Numerator) && (mDenominator == obj.Denominator);
-            }
+            public bool Equals(Fraction32 obj) => (mIsNegative == obj.IsNegative) && (mNumerator == obj.Numerator) && (mDenominator == obj.Denominator);
 
             /// <summary>
             /// Returns the hash code for this instance.
             /// </summary>
             /// <returns> A 32-bit signed integer that is the hash code for this instance.</returns>
-            public override int GetHashCode()
-            {
-                return mDenominator ^ ((mIsNegative ? -1 : 1) * mNumerator);
-            }
+            public override int GetHashCode() => mDenominator ^ ((mIsNegative ? -1 : 1) * mNumerator);
 
             /// <summary>
             /// Sets the value of this instance to the fraction represented
@@ -694,11 +593,13 @@ namespace ExifLibrary
             public void Set(int numerator, int denominator)
             {
                 mIsNegative = false;
+
                 if (numerator < 0)
                 {
                     mIsNegative = !mIsNegative;
                     numerator = -numerator;
                 }
+
                 if (denominator < 0)
                 {
                     mIsNegative = !mIsNegative;
@@ -709,7 +610,9 @@ namespace ExifLibrary
                 mDenominator = denominator;
 
                 if (mDenominator != 0)
+                {
                     Reduce(ref mNumerator, ref mDenominator);
+                }
             }
 
             /// <summary>
@@ -730,9 +633,11 @@ namespace ExifLibrary
             public string ToString(string format, IFormatProvider formatProvider)
             {
                 StringBuilder sb = new StringBuilder();
+
                 sb.Append(((mIsNegative ? -1 : 1) * mNumerator).ToString(format, formatProvider));
                 sb.Append('/');
                 sb.Append(mDenominator.ToString(format, formatProvider));
+
                 return sb.ToString();
             }
 
@@ -750,9 +655,11 @@ namespace ExifLibrary
             public string ToString(string format)
             {
                 StringBuilder sb = new StringBuilder();
+
                 sb.Append(((mIsNegative ? -1 : 1) * mNumerator).ToString(format));
                 sb.Append('/');
                 sb.Append(mDenominator.ToString(format));
+
                 return sb.ToString();
             }
 
@@ -770,9 +677,11 @@ namespace ExifLibrary
             public string ToString(IFormatProvider formatProvider)
             {
                 StringBuilder sb = new StringBuilder();
+
                 sb.Append(((mIsNegative ? -1 : 1) * mNumerator).ToString(formatProvider));
                 sb.Append('/');
                 sb.Append(mDenominator.ToString(formatProvider));
+
                 return sb.ToString();
             }
 
@@ -783,9 +692,11 @@ namespace ExifLibrary
             public override string ToString()
             {
                 StringBuilder sb = new StringBuilder();
+
                 sb.Append(((mIsNegative ? -1 : 1) * mNumerator).ToString());
                 sb.Append('/');
                 sb.Append(mDenominator.ToString());
+
                 return sb.ToString();
             }
         }
@@ -814,54 +725,29 @@ namespace ExifLibrary
                 mError = error;
 
                 if (mDenominator != 0)
+                {
                     Reduce(ref mNumerator, ref mDenominator);
+                }
             }
 
-            public UFraction32(uint numerator, uint denominator)
-                            : this(numerator, denominator, 0)
-            {
-                ;
-            }
+            public UFraction32(uint numerator, uint denominator) : this(numerator, denominator, 0) { }
 
-            public UFraction32(uint numerator)
-                            : this(numerator, (uint)1)
-            {
-                ;
-            }
+            public UFraction32(uint numerator) : this(numerator, (uint)1) { }
 
-            public UFraction32(UFraction32 f)
-                            : this(f.Numerator, f.Denominator, f.Error)
-            {
-                ;
-            }
+            public UFraction32(UFraction32 f) : this(f.Numerator, f.Denominator, f.Error) { }
 
-            public UFraction32(float value)
-                            : this((double)value)
-            {
-                ;
-            }
+            public UFraction32(float value) : this((double)value) { }
 
-            public UFraction32(double value)
-                            : this(FromDouble(value))
-            {
-                ;
-            }
+            public UFraction32(double value) : this(FromDouble(value)) { }
 
-            public UFraction32(string s)
-                            : this(FromString(s))
-            {
-                ;
-            }
+            public UFraction32(string s) : this(FromString(s)) { }
 
             /// <summary>
             /// Gets or sets the denominator.
             /// </summary>
             public uint Denominator
             {
-                get
-                {
-                    return mDenominator;
-                }
+                get => mDenominator;
                 set
                 {
                     mDenominator = value;
@@ -874,10 +760,7 @@ namespace ExifLibrary
             /// </summary>
             public double Error
             {
-                get
-                {
-                    return mError;
-                }
+                get => mError;
             }
 
             /// <summary>
@@ -885,10 +768,7 @@ namespace ExifLibrary
             /// </summary>
             public uint Numerator
             {
-                get
-                {
-                    return mNumerator;
-                }
+                get => mNumerator;
                 set
                 {
                     mNumerator = value;
@@ -904,12 +784,18 @@ namespace ExifLibrary
             private static UFraction32 FromDouble(double value)
             {
                 if (value < 0)
+                {
                     throw new ArgumentException("value cannot be negative.", "value");
+                }
 
                 if (double.IsNaN(value))
+                {
                     return UFraction32.NaN;
+                }
                 else if (double.IsInfinity(value))
+                {
                     return UFraction32.Infinity;
+                }
 
                 double f = value;
                 double forg = f;
@@ -920,41 +806,67 @@ namespace ExifLibrary
                 double lasterr = 1.0;
                 uint a = 0;
                 int currIteration = 0;
+
                 while (true)
                 {
                     if (++currIteration > MaximumIterations)
+                    {
                         break;
+                    }
 
                     a = (uint)Math.Floor(f);
                     f = f - (double)a;
+
                     if (Math.Abs(f) < double.Epsilon)
+                    {
                         break;
+                    }
+
                     f = 1.0 / f;
+
                     if (double.IsInfinity(f))
+                    {
                         break;
-                    uint cnum = num * a + lnum;
-                    uint cden = den * a + lden;
-                    if (Math.Abs((double)cnum / (double)cden - forg) < double.Epsilon)
-                        break;
-                    double err = ((double)cnum / (double)cden - (double)num / (double)den) / ((double)num / (double)den);
-                    // Are we converging?
-                    if (err >= lasterr)
-                        break;
-                    lasterr = err;
-                    lnum = num;
-                    lden = den;
-                    num = cnum;
-                    den = cden;
+
+                        uint cnum = num * a + lnum;
+                        uint cden = den * a + lden;
+
+                        if (Math.Abs((double)cnum / (double)cden - forg) < double.Epsilon)
+                        {
+                            break;
+                        }
+
+                        double err = ((double)cnum / (double)cden - (double)num / (double)den) / ((double)num / (double)den);
+
+                        // Are we converging?
+                        if (err >= lasterr)
+                        {
+                            break;
+                        }
+
+                        lasterr = err;
+                        lnum = num;
+                        lden = den;
+                        num = cnum;
+                        den = cden;
+                    }
+
+                    uint fnum = num * a + lnum;
+                    uint fden = den * a + lden;
+
+                    if (fden > 0)
+                    {
+                        lasterr = value - ((double)fnum / (double)fden);
+                    }
+                    else
+                    {
+                        lasterr = double.PositiveInfinity;
+                    }
+
+                    return new UFraction32(fnum, fden, lasterr);
                 }
-                uint fnum = num * a + lnum;
-                uint fden = den * a + lden;
 
-                if (fden > 0)
-                    lasterr = value - ((double)fnum / (double)fden);
-                else
-                    lasterr = double.PositiveInfinity;
-
-                return new UFraction32(fnum, fden, lasterr);
+                return new UFraction32(num, den, lasterr);
             }
 
             /// <summary>Converts the string representation of a fraction to a Fraction type.</summary>
@@ -968,7 +880,9 @@ namespace ExifLibrary
             private static UFraction32 FromString(string s)
             {
                 if (s == null)
+                {
                     throw new ArgumentNullException("s");
+                }
 
                 string[] sa = s.Split('/');
                 uint numerator = 1;
@@ -994,7 +908,9 @@ namespace ExifLibrary
                     denominator = uint.Parse(sa[1]);
                 }
                 else
+                {
                     throw new FormatException("The input string must be formatted as n/d where n and d are integers");
+                }
 
                 return new UFraction32(numerator, denominator);
             }
@@ -1012,40 +928,25 @@ namespace ExifLibrary
                 denominator = denominator / gcd;
             }
 
-            public static explicit operator double(UFraction32 f)
-            {
-                return ((double)f.Numerator) / ((double)f.Denominator);
-            }
+            public static explicit operator double(UFraction32 f) => ((double)f.Numerator) / ((double)f.Denominator);
 
-            public static explicit operator float(UFraction32 f)
-            {
-                return ((float)f.Numerator) / ((float)f.Denominator);
-            }
+            public static explicit operator float(UFraction32 f) => ((float)f.Numerator) / ((float)f.Denominator);
 
-            public static explicit operator uint(UFraction32 f)
-            {
-                return ((uint)f.Numerator) / ((uint)f.Denominator);
-            }
+            public static explicit operator uint(UFraction32 f) => ((uint)f.Numerator) / ((uint)f.Denominator);
 
             /// <summary>
             /// Returns the multiplicative inverse of a given value.
             /// </summary>
             /// <param name="f">A fraction.</param>
             /// <returns>Multiplicative inverse of f.</returns>
-            public static UFraction32 Inverse(UFraction32 f)
-            {
-                return new UFraction32(f.Denominator, f.Numerator);
-            }
+            public static UFraction32 Inverse(UFraction32 f) => new UFraction32(f.Denominator, f.Numerator);
 
             /// <summary>
             /// Returns a value indicating whether the specified number evaluates to infinity.
             /// </summary>
             /// <param name="f">A fraction.</param>
             /// <returns>true if f evaluates to Fraction.Infinity; otherwise, false.</returns>
-            public static bool IsInfinity(UFraction32 f)
-            {
-                return (f.Denominator == 0);
-            }
+            public static bool IsInfinity(UFraction32 f) => (f.Denominator == 0);
 
             /// <summary>
             /// Returns a value indicating whether the specified number evaluates to a value
@@ -1053,41 +954,20 @@ namespace ExifLibrary
             /// </summary>
             /// <param name="f">A fraction.</param>
             /// <returns>true if f evaluates to Fraction.NaN; otherwise, false.</returns>
-            public static bool IsNan(UFraction32 f)
-            {
-                return (f.Numerator == 0 && f.Denominator == 0);
-            }
+            public static bool IsNan(UFraction32 f) => (f.Numerator == 0 && f.Denominator == 0);
 
             // Subtraction
-            public static UFraction32 operator -(UFraction32 f, uint n)
-            {
-                return f - new UFraction32(n, 1);
-            }
+            public static UFraction32 operator -(UFraction32 f, uint n) => f - new UFraction32(n, 1);
 
-            public static UFraction32 operator -(uint n, UFraction32 f)
-            {
-                return new UFraction32(n, 1) - f;
-            }
+            public static UFraction32 operator -(uint n, UFraction32 f) => new UFraction32(n, 1) - f;
 
-            public static UFraction32 operator -(UFraction32 f, float n)
-            {
-                return new UFraction32(((float)f) - n);
-            }
+            public static UFraction32 operator -(UFraction32 f, float n) => new UFraction32(((float)f) - n);
 
-            public static UFraction32 operator -(float n, UFraction32 f)
-            {
-                return new UFraction32(n) - f;
-            }
+            public static UFraction32 operator -(float n, UFraction32 f) => new UFraction32(n) - f;
 
-            public static UFraction32 operator -(UFraction32 f, double n)
-            {
-                return new UFraction32(((double)f) - n);
-            }
+            public static UFraction32 operator -(UFraction32 f, double n) => new UFraction32(((double)f) - n);
 
-            public static UFraction32 operator -(double n, UFraction32 f)
-            {
-                return new UFraction32(n) - f;
-            }
+            public static UFraction32 operator -(double n, UFraction32 f) => new UFraction32(n) - f;
 
             public static UFraction32 operator -(UFraction32 f1, UFraction32 f2)
             {
@@ -1098,103 +978,46 @@ namespace ExifLibrary
             }
 
             // Decrement
-            public static UFraction32 operator --(UFraction32 f)
-            {
-                return f - new UFraction32(1, 1);
-            }
+            public static UFraction32 operator --(UFraction32 f) => f - new UFraction32(1, 1);
 
-            public static bool operator !=(UFraction32 f1, UFraction32 f2)
-            {
-                return (f1.Numerator != f2.Numerator) || (f1.Denominator != f2.Denominator);
-            }
+            public static bool operator !=(UFraction32 f1, UFraction32 f2) => (f1.Numerator != f2.Numerator) || (f1.Denominator != f2.Denominator);
 
             // Multiplication
-            public static UFraction32 operator *(UFraction32 f, uint n)
-            {
-                return new UFraction32(f.Numerator * n, f.Denominator * n);
-            }
+            public static UFraction32 operator *(UFraction32 f, uint n) => new UFraction32(f.Numerator * n, f.Denominator * n);
 
-            public static UFraction32 operator *(uint n, UFraction32 f)
-            {
-                return f * n;
-            }
+            public static UFraction32 operator *(uint n, UFraction32 f) => f * n;
 
-            public static UFraction32 operator *(UFraction32 f, float n)
-            {
-                return new UFraction32(((float)f) * n);
-            }
+            public static UFraction32 operator *(UFraction32 f, float n) => new UFraction32(((float)f) * n);
 
-            public static UFraction32 operator *(float n, UFraction32 f)
-            {
-                return f * n;
-            }
+            public static UFraction32 operator *(float n, UFraction32 f) => f * n;
 
-            public static UFraction32 operator *(UFraction32 f, double n)
-            {
-                return new UFraction32(((double)f) * n);
-            }
+            public static UFraction32 operator *(UFraction32 f, double n) => new UFraction32(((double)f) * n);
 
-            public static UFraction32 operator *(double n, UFraction32 f)
-            {
-                return f * n;
-            }
+            public static UFraction32 operator *(double n, UFraction32 f) => f * n;
 
-            public static UFraction32 operator *(UFraction32 f1, UFraction32 f2)
-            {
-                return new UFraction32(f1.Numerator * f2.Numerator, f1.Denominator * f2.Denominator);
-            }
+            public static UFraction32 operator *(UFraction32 f1, UFraction32 f2) => new UFraction32(f1.Numerator * f2.Numerator, f1.Denominator * f2.Denominator);
 
             // Divison
-            public static UFraction32 operator /(UFraction32 f, uint n)
-            {
-                return new UFraction32(f.Numerator / n, f.Denominator / n);
-            }
+            public static UFraction32 operator /(UFraction32 f, uint n) => new UFraction32(f.Numerator / n, f.Denominator / n);
 
-            public static UFraction32 operator /(UFraction32 f, float n)
-            {
-                return new UFraction32(((float)f) / n);
-            }
+            public static UFraction32 operator /(UFraction32 f, float n) => new UFraction32(((float)f) / n);
 
-            public static UFraction32 operator /(UFraction32 f, double n)
-            {
-                return new UFraction32(((double)f) / n);
-            }
+            public static UFraction32 operator /(UFraction32 f, double n) => new UFraction32(((double)f) / n);
 
-            public static UFraction32 operator /(UFraction32 f1, UFraction32 f2)
-            {
-                return f1 * Inverse(f2);
-            }
+            public static UFraction32 operator /(UFraction32 f1, UFraction32 f2) => f1 * Inverse(f2);
 
             // Addition
-            public static UFraction32 operator +(UFraction32 f, uint n)
-            {
-                return f + new UFraction32(n, 1);
-            }
+            public static UFraction32 operator +(UFraction32 f, uint n) => f + new UFraction32(n, 1);
 
-            public static UFraction32 operator +(uint n, UFraction32 f)
-            {
-                return f + n;
-            }
+            public static UFraction32 operator +(uint n, UFraction32 f) => f + n;
 
-            public static UFraction32 operator +(UFraction32 f, float n)
-            {
-                return new UFraction32(((float)f) + n);
-            }
+            public static UFraction32 operator +(UFraction32 f, float n) => new UFraction32(((float)f) + n);
 
-            public static UFraction32 operator +(float n, UFraction32 f)
-            {
-                return f + n;
-            }
+            public static UFraction32 operator +(float n, UFraction32 f) => f + n;
 
-            public static UFraction32 operator +(UFraction32 f, double n)
-            {
-                return new UFraction32(((double)f) + n);
-            }
+            public static UFraction32 operator +(UFraction32 f, double n) => new UFraction32(((double)f) + n);
 
-            public static UFraction32 operator +(double n, UFraction32 f)
-            {
-                return f + n;
-            }
+            public static UFraction32 operator +(double n, UFraction32 f) => f + n;
 
             public static UFraction32 operator +(UFraction32 f1, UFraction32 f2)
             {
@@ -1205,25 +1028,13 @@ namespace ExifLibrary
             }
 
             // Increment
-            public static UFraction32 operator ++(UFraction32 f)
-            {
-                return f + new UFraction32(1, 1);
-            }
+            public static UFraction32 operator ++(UFraction32 f) => f + new UFraction32(1, 1);
 
-            public static bool operator <(UFraction32 f1, UFraction32 f2)
-            {
-                return (f1.Numerator * f2.Denominator) < (f2.Numerator * f1.Denominator);
-            }
+            public static bool operator <(UFraction32 f1, UFraction32 f2) => (f1.Numerator * f2.Denominator) < (f2.Numerator * f1.Denominator);
 
-            public static bool operator ==(UFraction32 f1, UFraction32 f2)
-            {
-                return (f1.Numerator == f2.Numerator) && (f1.Denominator == f2.Denominator);
-            }
+            public static bool operator ==(UFraction32 f1, UFraction32 f2) => (f1.Numerator == f2.Numerator) && (f1.Denominator == f2.Denominator);
 
-            public static bool operator >(UFraction32 f1, UFraction32 f2)
-            {
-                return (f1.Numerator * f2.Denominator) > (f2.Numerator * f1.Denominator);
-            }
+            public static bool operator >(UFraction32 f1, UFraction32 f2) => (f1.Numerator * f2.Denominator) > (f2.Numerator * f1.Denominator);
 
             /// <summary>
             /// Converts the string representation of a fraction to a fraction object.
@@ -1236,10 +1047,7 @@ namespace ExifLibrary
             /// s represents a number less than System.UInt32.MinValue or greater than
             /// System.UInt32.MaxValue.
             /// </exception>
-            public static UFraction32 Parse(string s)
-            {
-                return FromString(s);
-            }
+            public static UFraction32 Parse(string s) => FromString(s);
 
             /// <summary>
             /// Converts the string representation of a fraction to a fraction object.
@@ -1276,7 +1084,9 @@ namespace ExifLibrary
             public int CompareTo(object obj)
             {
                 if (!(obj is UFraction32))
+                {
                     throw new ArgumentException("obj must be of type UFraction32", "obj");
+                }
 
                 return CompareTo((UFraction32)obj);
             }
@@ -1295,9 +1105,14 @@ namespace ExifLibrary
             public int CompareTo(UFraction32 obj)
             {
                 if (this < obj)
+                {
                     return -1;
+                }
                 else if (this > obj)
+                {
                     return 1;
+                }
+
                 return 0;
             }
 
@@ -1310,12 +1125,18 @@ namespace ExifLibrary
             public override bool Equals(object obj)
             {
                 if (obj == null)
+                {
                     return false;
+                }
 
                 if (obj is UFraction32)
+                {
                     return Equals((UFraction32)obj);
+                }
                 else
+                {
                     return false;
+                }
             }
 
             /// <summary>
@@ -1324,19 +1145,13 @@ namespace ExifLibrary
             /// <param name="obj">Another fraction object to compare to.</param>
             /// <returns>true if obj and this instance represent the same value;
             /// otherwise, false.</returns>
-            public bool Equals(UFraction32 obj)
-            {
-                return (mNumerator == obj.Numerator) && (mDenominator == obj.Denominator);
-            }
+            public bool Equals(UFraction32 obj) => (mNumerator == obj.Numerator) && (mDenominator == obj.Denominator);
 
             /// <summary>
             /// Returns the hash code for this instance.
             /// </summary>
             /// <returns> A 32-bit signed integer that is the hash code for this instance.</returns>
-            public override int GetHashCode()
-            {
-                return ((int)mDenominator) ^ ((int)mNumerator);
-            }
+            public override int GetHashCode() => ((int)mDenominator) ^ ((int)mNumerator);
 
             /// <summary>
             /// Sets the value of this instance to the fraction represented
@@ -1350,7 +1165,9 @@ namespace ExifLibrary
                 mDenominator = denominator;
 
                 if (mDenominator != 0)
+                {
                     Reduce(ref mNumerator, ref mDenominator);
+                }
             }
 
             /// <summary>
@@ -1371,9 +1188,11 @@ namespace ExifLibrary
             public string ToString(string format, IFormatProvider formatProvider)
             {
                 StringBuilder sb = new StringBuilder();
+
                 sb.Append(mNumerator.ToString(format, formatProvider));
                 sb.Append('/');
                 sb.Append(mDenominator.ToString(format, formatProvider));
+
                 return sb.ToString();
             }
 
@@ -1391,9 +1210,11 @@ namespace ExifLibrary
             public string ToString(string format)
             {
                 StringBuilder sb = new StringBuilder();
+
                 sb.Append(mNumerator.ToString(format));
                 sb.Append('/');
                 sb.Append(mDenominator.ToString(format));
+
                 return sb.ToString();
             }
 
@@ -1411,9 +1232,11 @@ namespace ExifLibrary
             public string ToString(IFormatProvider formatProvider)
             {
                 StringBuilder sb = new StringBuilder();
+
                 sb.Append(mNumerator.ToString(formatProvider));
                 sb.Append('/');
                 sb.Append(mDenominator.ToString(formatProvider));
+
                 return sb.ToString();
             }
 
@@ -1424,9 +1247,11 @@ namespace ExifLibrary
             public override string ToString()
             {
                 StringBuilder sb = new StringBuilder();
+
                 sb.Append(mNumerator.ToString());
                 sb.Append('/');
                 sb.Append(mDenominator.ToString());
+
                 return sb.ToString();
             }
         }

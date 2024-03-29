@@ -101,30 +101,39 @@ namespace ExifLibrary
         /// <summary>
         /// Gets the byte count or number of components.
         /// </summary>
-        public uint Count { get { return mCount; } }
+        public uint Count
+        {
+            get => mCount;
+        }
 
         /// <summary>
         /// Gets the field value as an array of bytes.
         /// </summary>
-        public byte[] Data { get { return mData; } }
+        public byte[] Data 
+        { 
+            get => mData;
+        }
 
         /// <summary>
         /// Gets the tag ID defined in the Exif standard.
         /// </summary>
-        public ushort TagID { get { return mTagID; } }
+        public ushort TagID 
+        {
+            get => mTagID; 
+        }
 
         /// <summary>
         /// Gets the type code defined in the Exif standard.
         /// </summary>
-        public InterOpType TypeID { get { return mTypeID; } }
+        public InterOpType TypeID 
+        {
+            get => mTypeID; 
+        }
 
         /// <summary>
         /// Returns the string representation of this instance.
         /// </summary>
         /// <returns></returns>
-        public override string ToString()
-        {
-            return string.Format("Tag: {0}, Type: {1}, Count: {2}, Data Length: {3}", mTagID, (ushort)mTypeID, mCount, mData.Length);
-        }
+        public override string ToString() => $"Tag: {mTagID}, Type: {(ushort)mTypeID}, Count: {mCount}, Data Length: {mData.Length}";
     }
 }

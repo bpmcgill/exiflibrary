@@ -7,17 +7,11 @@ namespace ExifLibrary
     /// </summary>
     public class IFD0IsEmptyException : Exception
     {
-        public IFD0IsEmptyException()
-            : base("0th IFD section cannot be empty.")
-        {
-            ;
-        }
+        public IFD0IsEmptyException() : base("0th IFD section cannot be empty.")
+        { }
 
-        public IFD0IsEmptyException(string message)
-            : base(message)
-        {
-            ;
-        }
+        public IFD0IsEmptyException(string message) : base(message)
+        { }
     }
 
     /// <summary>
@@ -26,17 +20,11 @@ namespace ExifLibrary
     /// </summary>
     public class NotValidExifFileException : Exception
     {
-        public NotValidExifFileException()
-            : base("Not a valid JPEG/Exif file.")
-        {
-            ;
-        }
+        public NotValidExifFileException() : base("Not a valid JPEG/Exif file.")
+        { }
 
-        public NotValidExifFileException(string message)
-            : base(message)
-        {
-            ;
-        }
+        public NotValidExifFileException(string message) : base(message)
+        { }
     }
 
     /// <summary>
@@ -45,17 +33,11 @@ namespace ExifLibrary
     /// </summary>
     public class NotValidGIFFileException : Exception
     {
-        public NotValidGIFFileException()
-            : base("Not a valid GIF file.")
-        {
-            ;
-        }
+        public NotValidGIFFileException() : base("Not a valid GIF file.")
+        { }
 
-        public NotValidGIFFileException(string message)
-            : base(message)
-        {
-            ;
-        }
+        public NotValidGIFFileException(string message) : base(message)
+        { }
     }
 
     /// <summary>
@@ -64,17 +46,11 @@ namespace ExifLibrary
     /// </summary>
     public class UnknownEnumTypeException : Exception
     {
-        public UnknownEnumTypeException()
-            : base("Unknown enum type.")
-        {
-            ;
-        }
+        public UnknownEnumTypeException() : base("Unknown enum type.")
+        { }
 
-        public UnknownEnumTypeException(string message)
-            : base(message)
-        {
-            ;
-        }
+        public UnknownEnumTypeException(string message) : base(message)
+        { }
     }
 
     /// <summary>
@@ -82,16 +58,10 @@ namespace ExifLibrary
     /// </summary>
     public class UnknownIFDSectionException : Exception
     {
-        public UnknownIFDSectionException()
-            : base("Unknown IFD section.")
-        {
-            ;
-        }
+        public UnknownIFDSectionException() : base("Unknown IFD section.")
+        { }
 
-        public UnknownIFDSectionException(string message)
-            : base(message)
-        {
-            ;
-        }
+        public UnknownIFDSectionException(string message) : base(message)
+        { }
     }
 }

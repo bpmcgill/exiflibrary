@@ -28,11 +28,8 @@ namespace ExifLibrary
         /// Constructs a JPEGSection represented by the marker byte.
         /// </summary>
         /// <param name="marker">The marker byte representing the section.</param>
-        public JPEGSection(JPEGMarker marker)
-            : this(marker, new byte[0], new byte[0])
-        {
-            ;
-        }
+        public JPEGSection(JPEGMarker marker) : this(marker, new byte[0], new byte[0])
+        { }
 
         /// <summary>
         /// For the SOS and RST markers, this contains the entropy coded data.
@@ -55,9 +52,6 @@ namespace ExifLibrary
         /// Returns a string representation of the current section.
         /// </summary>
         /// <returns>A System.String that represents the current section.</returns>
-        public override string ToString()
-        {
-            return string.Format("{0} => Header: {1} bytes, Entropy Data: {2} bytes", Marker, Header.Length, EntropyData.Length);
-        }
+        public override string ToString() => $"{Marker} => Header: {Header.Length} bytes, Entropy Data: {EntropyData.Length} bytes";
     }
 }

@@ -1,6 +1,5 @@
-using System;
-using Xunit;
 using ExifLibrary;
+using Xunit;
 
 namespace UnitTests
 {
@@ -13,7 +12,7 @@ namespace UnitTests
             {
                 var img = ImageFile.FromFile(TestHelpers.TestImagePath("Orientation", "Orientation_" + i.ToString() + ".jpg"));
                 var orientation = img.Properties.Get<ExifEnumProperty<Orientation>>(ExifTag.Orientation);
-                Assert.Equal((ExifLibrary.Orientation)i, orientation);
+                Assert.Equal((Orientation)i, orientation);
             }
         }
     }

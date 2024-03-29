@@ -53,8 +53,11 @@ namespace ExifLibrary
         /// <param name="key">The Exif tag associated with the Exif property.</param>
         public ExifProperty this[int index]
         {
-            get { return Properties[index]; }
-            set { Properties[index] = value; }
+            get => Properties[index];
+            set
+            {
+                Properties[index] = value;
+            }
         }
 
         /// <summary>
@@ -68,6 +71,7 @@ namespace ExifLibrary
             using (var memStream = new MemoryStream(imageData))
             {
                 memStream.Seek(0, SeekOrigin.Begin);
+
                 return FromStreamInternal(memStream, encoding);
             }
         }
@@ -81,6 +85,7 @@ namespace ExifLibrary
         protected static ImageFile FromStream(Stream stream, Encoding encoding)
         {
             var memStream = stream as MemoryStream;
+
             if (memStream != null)
             {
                 return FromStreamInternal(memStream, encoding);
@@ -90,7 +95,9 @@ namespace ExifLibrary
                 using (memStream = new MemoryStream())
                 {
                     stream.CopyTo(memStream);
+
                     memStream.Seek(0, SeekOrigin.Begin);
+
                     return FromStreamInternal(memStream, encoding);
                 }
             }
@@ -105,28 +112,42 @@ namespace ExifLibrary
         protected static ImageFile FromStreamInternal(MemoryStream stream, Encoding encoding)
         {
             byte[] header = new byte[8];
+
             stream.Seek(0, SeekOrigin.Begin);
+
             if (stream.Read(header, 0, header.Length) != header.Length)
+            {
                 throw new NotValidImageFileException();
+            }
 
             // JPEG
             if (header[0] == 0xFF && header[1] == 0xD8)
+            {
                 return new JPEGFile(stream, encoding);
+            }
 
             // TIFF
             string tiffHeader = Encoding.ASCII.GetString(header, 0, 4);
+
             if (tiffHeader == "MM\x00\x2a" || tiffHeader == "II\x2a\x00")
+            {
                 return new TIFFFile(stream, encoding);
+            }
 
             // PNG
             if (header[0] == 0x89 && header[1] == 0x50 && header[2] == 0x4E && header[3] == 0x47 &&
                 header[4] == 0x0D && header[5] == 0x0A && header[6] == 0x1A && header[7] == 0x0A)
+            {
                 return new PNGFile(stream, encoding);
+            }
 
             // GIF
             string gifHeader = Encoding.ASCII.GetString(header, 0, 3);
+
             if (gifHeader == "GIF")
+            {
                 return new GIFFile(stream, encoding);
+            }
 
             throw new NotValidImageFileException();
         }
@@ -142,20 +163,14 @@ namespace ExifLibrary
         /// </summary>
         /// <param name="imageData">A buffer containing image data.</param>
         /// <returns>The <see cref="ImageFile"/> created from the buffer.</returns>
-        public static ImageFile FromBuffer(byte[] imageData)
-        {
-            return FromBuffer(imageData, Encoding.UTF8);
-        }
+        public static ImageFile FromBuffer(byte[] imageData) => FromBuffer(imageData, Encoding.UTF8);
 
         /// <summary>
         /// Creates an <see cref="ImageFile"/> from the specified file.
         /// </summary>
         /// <param name="filename">A string that contains the name of the file.</param>
         /// <returns>The <see cref="ImageFile"/> created from the file.</returns>
-        public static ImageFile FromFile(string filename)
-        {
-            return FromFile(filename, Encoding.UTF8);
-        }
+        public static ImageFile FromFile(string filename) => FromFile(filename, Encoding.UTF8);
 
         /// <summary>
         /// Creates an <see cref="ImageFile"/> from the specified file.
@@ -176,10 +191,7 @@ namespace ExifLibrary
         /// </summary>
         /// <param name="filename">A string that contains the name of the file.</param>
         /// <returns>The <see cref="ImageFile"/> created from the file.</returns>
-        public static async Task<ImageFile> FromFileAsync(string filename)
-        {
-            return await FromFileAsync(filename, Encoding.UTF8);
-        }
+        public static async Task<ImageFile> FromFileAsync(string filename) => await FromFileAsync(filename, Encoding.UTF8);
 
         /// <summary>
         /// Creates an <see cref="ImageFile"/> from the specified file while while asynchronously reading image data.
@@ -190,10 +202,13 @@ namespace ExifLibrary
         public static async Task<ImageFile> FromFileAsync(string filename, Encoding encoding)
         {
             using (FileStream stream = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, true))
+
             using (var memStream = new MemoryStream())
             {
                 await stream.CopyToAsync(memStream);
+
                 memStream.Seek(0, SeekOrigin.Begin);
+
                 return await FromStreamAsync(memStream, encoding);
             }
         }
@@ -203,20 +218,14 @@ namespace ExifLibrary
         /// </summary>
         /// <param name="stream">A stream that contains image data.</param>
         /// <returns>The <see cref="ImageFile"/> created from the stream.</returns>
-        public static ImageFile FromStream(Stream stream)
-        {
-            return FromStream(stream, Encoding.UTF8);
-        }
+        public static ImageFile FromStream(Stream stream) => FromStream(stream, Encoding.UTF8);
 
         /// <summary>
         /// Creates an <see cref="ImageFile"/> from the specified data stream by asynchronously reading image data.
         /// </summary>
         /// <param name="stream">A stream that contains image data.</param>
         /// <returns>The <see cref="ImageFile"/> created from the stream.</returns>
-        public static async Task<ImageFile> FromStreamAsync(Stream stream)
-        {
-            return await FromStreamAsync(stream, Encoding.UTF8);
-        }
+        public static async Task<ImageFile> FromStreamAsync(Stream stream) => await FromStreamAsync(stream, Encoding.UTF8);
 
         /// <summary>
         /// Creates an <see cref="ImageFile"/> from the specified data stream by asynchronously reading image data.
@@ -224,10 +233,7 @@ namespace ExifLibrary
         /// <param name="stream">A stream that contains image data.</param>
         /// <param name="encoding">The encoding to be used for text metadata when the source encoding is unknown.</param>
         /// <returns>The <see cref="ImageFile"/> created from the stream.</returns>
-        public static async Task<ImageFile> FromStreamAsync(Stream stream, Encoding encoding)
-        {
-            return FromStream(stream, encoding);
-        }
+        public static async Task<ImageFile> FromStreamAsync(Stream stream, Encoding encoding) => await Task.Run(() => FromStream(stream, encoding));
 
         /// <summary>
         /// Decreases file size by removing all metadata.
@@ -253,6 +259,7 @@ namespace ExifLibrary
         public void Save(Stream stream)
         {
             var memStream = stream as MemoryStream;
+
             if (memStream != null)
             {
                 SaveInternal(memStream);
@@ -284,9 +291,6 @@ namespace ExifLibrary
         /// Asynchronously saves the <see cref="ImageFile"/> to the specified stream.
         /// </summary>
         /// <param name="stream">A stream to save image data to.</param>
-        public virtual async Task SaveAsync(Stream stream)
-        {
-            Save(stream);
-        }
+        public virtual async Task SaveAsync(Stream stream) => await Task.Run(() => Save(stream));
     }
 }

@@ -59,8 +59,12 @@ namespace ExifLibrary
             // Read the Start of Image (SOI) marker. SOI marker is represented
             // with two bytes: 0xFF, 0xD8.
             byte[] markerbytes = new byte[2];
+
             if (stream.Read(markerbytes, 0, 2) != 2 || markerbytes[0] != 0xFF || markerbytes[1] != 0xD8)
+            {
                 throw new NotValidJPEGFileException();
+            }
+
             stream.Seek(0, SeekOrigin.Begin);
 
             // Search and read sections until we reach the end of file.
@@ -69,11 +73,14 @@ namespace ExifLibrary
                 // Read the next section marker. Section markers are two bytes
                 // with values 0xFF, 0x?? where ?? must not be 0x00 or 0xFF.
                 if (stream.Read(markerbytes, 0, 2) != 2 || markerbytes[0] != 0xFF || markerbytes[1] == 0x00 || markerbytes[1] == 0xFF)
+                {
                     throw new NotValidJPEGFileException();
+                }
 
                 JPEGMarker marker = (JPEGMarker)markerbytes[1];
 
                 byte[] header = new byte[0];
+
                 // SOI, EOI and RST markers do not contain any header
                 if (marker != JPEGMarker.SOI && marker != JPEGMarker.EOI && !(marker >= JPEGMarker.RST0 && marker <= JPEGMarker.RST7))
                 {
@@ -81,8 +88,12 @@ namespace ExifLibrary
                     // This value is a 16-bit unsigned integer
                     // in big endian byte-order.
                     byte[] lengthbytes = new byte[2];
+
                     if (stream.Read(lengthbytes, 0, 2) != 2)
+                    {
                         throw new NotValidJPEGFileException();
+                    }
+
                     long length = (long)BitConverterEx.BigEndian.ToUInt16(lengthbytes, 0);
 
                     // Read section header.
@@ -93,6 +104,7 @@ namespace ExifLibrary
                 // followed by entropy coded data. For that, we need to read until
                 // the next section marker once we reach a SOS or RST.
                 byte[] entropydata = new byte[0];
+
                 if (marker == JPEGMarker.SOS || (marker >= JPEGMarker.RST0 && marker <= JPEGMarker.RST7))
                 {
                     long position = stream.Position;
@@ -105,16 +117,22 @@ namespace ExifLibrary
                         do
                         {
                             nextbyte = stream.ReadByte();
+
                             if (nextbyte == -1)
+                            {
                                 break;
+                            }
                         } while ((byte)nextbyte != 0xFF);
 
                         // Skip filler bytes (0xFF)
                         do
                         {
                             nextbyte = stream.ReadByte();
+
                             if (nextbyte == -1)
+                            {
                                 break;
+                            }
                         } while ((byte)nextbyte == 0xFF);
 
                         // We either reached the end of file before a new marker(this would indicate
@@ -124,10 +142,13 @@ namespace ExifLibrary
                         {
                             // If we reached a section marker seek back to just before the marker.
                             if (nextbyte != -1)
+                            {
                                 stream.Seek(-2, SeekOrigin.Current);
+                            }
 
                             // Calculate the length of the entropy coded data.
                             long edlength = stream.Position - position;
+
                             stream.Seek(position, SeekOrigin.Begin);
 
                             // Read entropy coded data
@@ -148,6 +169,7 @@ namespace ExifLibrary
                     if (readTrailingData)
                     {
                         long eoflength = stream.Length - stream.Position;
+
                         if (eoflength > 0)
                         {
                             Errors.Add(new ImageError(Severity.Info, "Reading trailing data past end-of-image marker."));
@@ -189,23 +211,33 @@ namespace ExifLibrary
         private void ReadExifAPP1()
         {
             // Find the APP1 section containing Exif metadata
-            exifApp1 = Sections.Find(a => (a.Marker == JPEGMarker.APP1) &&
-                a.Header.Length >= 6 &&
-                (Encoding.ASCII.GetString(a.Header, 0, 6) == "Exif\0\0"));
+            exifApp1 = Sections.Find(a => (a.Marker == JPEGMarker.APP1)
+                && a.Header.Length >= 6
+                && (Encoding.ASCII.GetString(a.Header, 0, 6) == "Exif\0\0"));
 
             // If there is no APP1 section, add a new one after the last APP0 section (if any).
             if (exifApp1 == null)
             {
                 int insertionIndex = Sections.FindLastIndex(a => a.Marker == JPEGMarker.APP0);
+
                 if (insertionIndex == -1)
+                {
                     insertionIndex = 0;
+                }
+
                 insertionIndex++;
                 exifApp1 = new JPEGSection(JPEGMarker.APP1);
                 Sections.Insert(insertionIndex, exifApp1);
-                if (BitConverterEx.SystemByteOrder == BitConverterEx.ByteOrder.LittleEndian)
-                    ByteOrder = BitConverterEx.ByteOrder.LittleEndian;
-                else
-                    ByteOrder = BitConverterEx.ByteOrder.BigEndian;
+
+                switch (BitConverterEx.SystemByteOrder)
+                {
+                    case BitConverterEx.ByteOrder.LittleEndian:
+                        ByteOrder = BitConverterEx.ByteOrder.LittleEndian;
+                        break;
+                    default:
+                        ByteOrder = BitConverterEx.ByteOrder.BigEndian;
+                        break;
+                }
                 return;
             }
 
@@ -215,21 +247,38 @@ namespace ExifLibrary
 
             // TIFF header
             int tiffoffset = 6;
-            if (header[tiffoffset] == 0x49 && header[tiffoffset + 1] == 0x49)
-                ByteOrder = BitConverterEx.ByteOrder.LittleEndian;
-            else if (header[tiffoffset] == 0x4D && header[tiffoffset + 1] == 0x4D)
-                ByteOrder = BitConverterEx.ByteOrder.BigEndian;
-            else
-                throw new NotValidExifFileException();
+
+            switch (header[tiffoffset])
+            {
+                case 0x49 when header[tiffoffset + 1] == 0x49:
+                    ByteOrder = BitConverterEx.ByteOrder.LittleEndian;
+                    break;
+                case 0x4D when header[tiffoffset + 1] == 0x4D:
+                    ByteOrder = BitConverterEx.ByteOrder.BigEndian;
+                    break;
+                default:
+                    throw new NotValidExifFileException();
+            }
 
             // TIFF header may have a different byte order
             BitConverterEx.ByteOrder tiffByteOrder = ByteOrder;
-            if (BitConverterEx.LittleEndian.ToUInt16(header, tiffoffset + 2) == 42)
-                tiffByteOrder = BitConverterEx.ByteOrder.LittleEndian;
-            else if (BitConverterEx.BigEndian.ToUInt16(header, tiffoffset + 2) == 42)
-                tiffByteOrder = BitConverterEx.ByteOrder.BigEndian;
-            else
-                throw new NotValidExifFileException();
+            switch (BitConverterEx.LittleEndian.ToUInt16(header, tiffoffset + 2))
+            {
+                case 42:
+                    tiffByteOrder = BitConverterEx.ByteOrder.LittleEndian;
+                    break;
+                default:
+                    if (BitConverterEx.BigEndian.ToUInt16(header, tiffoffset + 2) == 42)
+                    {
+                        tiffByteOrder = BitConverterEx.ByteOrder.BigEndian;
+                    }
+                    else
+                    {
+                        throw new NotValidExifFileException();
+                    }
+
+                    break;
+            }
 
             // Offset to 0th IFD
             if (header.Length - (tiffoffset + 4) >= 4)
@@ -239,6 +288,7 @@ namespace ExifLibrary
             }
 
             BitConverterEx conv = new BitConverterEx(ByteOrder, BitConverterEx.SystemByteOrder);
+
             int thumboffset = -1;
             int thumblength = 0;
             int thumbtype = -1;
@@ -247,7 +297,9 @@ namespace ExifLibrary
             while (ifdqueue.Count != 0)
             {
                 int ifdoffset = tiffoffset + ifdqueue.Keys[0];
+
                 IFD currentifd = ifdqueue.Values[0];
+
                 ifdqueue.RemoveAt(0);
 
                 // Field count
@@ -258,6 +310,7 @@ namespace ExifLibrary
                 }
 
                 ushort fieldcount = conv.ToUInt16(header, ifdoffset);
+
                 for (short i = 0; i < fieldcount; i++)
                 {
                     // Read field info
@@ -266,68 +319,102 @@ namespace ExifLibrary
                     ushort type = conv.ToUInt16(header, fieldoffset + 2);
                     uint count = conv.ToUInt32(header, fieldoffset + 4);
                     byte[] value = new byte[4];
+
                     if (fieldoffset + 8 + 4 > header.Length)
                     {
                         Errors.Add(new ImageError(Severity.Warning, $"Invalid IFD0 directory entry for tag {tag}."));
                         continue;
                     }
+
                     Array.Copy(header, fieldoffset + 8, value, 0, 4);
 
                     // Fields containing offsets to other IFDs
-                    if (currentifd == IFD.Zeroth && tag == 0x8769)
+                    switch (currentifd)
                     {
-                        int exififdpointer = (int)conv.ToUInt32(value, 0);
-                        if (ifdqueue.ContainsKey(exififdpointer))
-                        {
-                            Errors.Add(new ImageError(Severity.Warning, "IFD queue already contains an Exif IFD pointer."));
-                        }
-                        else
-                        {
-                            ifdqueue.Add(exififdpointer, IFD.EXIF);
-                        }
-                    }
-                    else if (currentifd == IFD.Zeroth && tag == 0x8825)
-                    {
-                        int gpsifdpointer = (int)conv.ToUInt32(value, 0);
-                        if (ifdqueue.ContainsKey(gpsifdpointer))
-                        {
-                            Errors.Add(new ImageError(Severity.Warning, "IFD queue already contains a GPS IFD pointer."));
-                        }
-                        else
-                        {
-                            ifdqueue.Add(gpsifdpointer, IFD.GPS);
-                        }
-                    }
-                    else if (currentifd == IFD.EXIF && tag == 0xa005)
-                    {
-                        int interopifdpointer = (int)conv.ToUInt32(value, 0);
-                        if (ifdqueue.ContainsKey(interopifdpointer))
-                        {
-                            Errors.Add(new ImageError(Severity.Warning, "IFD queue already contains an Interop IFD pointer."));
-                        }
-                        else
-                        {
-                            ifdqueue.Add(interopifdpointer, IFD.Interop);
-                        }
+                        case IFD.Zeroth when tag == 0x8769:
+                            {
+                                int exififdpointer = (int)conv.ToUInt32(value, 0);
+
+                                if (ifdqueue.ContainsKey(exififdpointer))
+                                {
+                                    Errors.Add(new ImageError(Severity.Warning, "IFD queue already contains an Exif IFD pointer."));
+                                }
+                                else
+                                {
+                                    ifdqueue.Add(exififdpointer, IFD.EXIF);
+                                }
+
+                                break;
+                            }
+
+                        case IFD.Zeroth when tag == 0x8825:
+                            {
+                                int gpsifdpointer = (int)conv.ToUInt32(value, 0);
+
+                                if (ifdqueue.ContainsKey(gpsifdpointer))
+                                {
+                                    Errors.Add(new ImageError(Severity.Warning, "IFD queue already contains a GPS IFD pointer."));
+                                }
+                                else
+                                {
+                                    ifdqueue.Add(gpsifdpointer, IFD.GPS);
+                                }
+
+                                break;
+                            }
+
+                        case IFD.EXIF when tag == 0xa005:
+                            {
+                                int interopifdpointer = (int)conv.ToUInt32(value, 0);
+
+                                if (ifdqueue.ContainsKey(interopifdpointer))
+                                {
+                                    Errors.Add(new ImageError(Severity.Warning, "IFD queue already contains an Interop IFD pointer."));
+                                }
+                                else
+                                {
+                                    ifdqueue.Add(interopifdpointer, IFD.Interop);
+                                }
+
+                                break;
+                            }
                     }
 
                     // Save the offset to maker note data
                     if (currentifd == IFD.EXIF && tag == 37500)
+                    {
                         makerNoteOffset = conv.ToUInt32(value, 0);
+                    }
 
                     // Calculate the bytes we need to read
                     uint baselength = 0;
-                    if (type == 1 || type == 2 || type == 6 || type == 7)
-                        baselength = 1;
-                    else if (type == 3 || type == 8)
-                        baselength = 2;
-                    else if (type == 4 || type == 9)
-                        baselength = 4;
-                    else if (type == 5 || type == 10)
-                        baselength = 8;
-                    else // Unknown or invalid type
-                        continue; // Skip and keep going
+
+                    switch (type)
+                    {
+                        case 1:
+                        case 2:
+                        case 6:
+                        case 7:
+                            baselength = 1;
+                            break;
+                        case 3:
+                        case 8:
+                            baselength = 2;
+                            break;
+                        case 4:
+                        case 9:
+                            baselength = 4;
+                            break;
+                        case 5:
+                        case 10:
+                            baselength = 8;
+                            break;
+                        default:
+                            continue;// Skip and keep going
+                    }
+
                     int totallength = (int)(count * baselength);
+
                     if (totallength < 0)
                     {
                         Errors.Add(new ImageError(Severity.Warning, $"Field length overflow for tag {tag}."));
@@ -338,31 +425,38 @@ namespace ExifLibrary
                     // the value field is an offset to the actual
                     // field value
                     int fieldposition = 0;
+
                     if (totallength > 4)
                     {
                         fieldposition = tiffoffset + (int)conv.ToUInt32(value, 0);
-                        if (fieldposition < 0)
+
+                        switch (fieldposition)
                         {
-                            Errors.Add(new ImageError(Severity.Warning, $"Field offset overflow for tag {tag}."));
-                            continue;
-                        }
-                        else if (fieldposition > header.Length - 1)
-                        {
-                            Errors.Add(new ImageError(Severity.Warning, $"Field offset for tag {tag} exceeds header length."));
-                            continue;
-                        }
-                        else if (fieldposition + totallength > header.Length)
-                        {
-                            Errors.Add(new ImageError(Severity.Warning, $"Field length for tag {tag} exceeds header length."));
-                            continue;
-                        }
-                        else if (totallength > int.MaxValue)
-                        {
-                            Errors.Add(new ImageError(Severity.Warning, $"Field length for tag {tag} exceeds maximum allowed length."));
-                            continue;
+                            case < 0:
+                                Errors.Add(new ImageError(Severity.Warning, $"Field offset overflow for tag {tag}."));
+                                continue;
+                            default:
+                                if (fieldposition > header.Length - 1)
+                                {
+                                    Errors.Add(new ImageError(Severity.Warning, $"Field offset for tag {tag} exceeds header length."));
+                                    continue;
+                                }
+                                else if (fieldposition + totallength > header.Length)
+                                {
+                                    Errors.Add(new ImageError(Severity.Warning, $"Field length for tag {tag} exceeds header length."));
+                                    continue;
+                                }
+                                else if (totallength > int.MaxValue)
+                                {
+                                    Errors.Add(new ImageError(Severity.Warning, $"Field length for tag {tag} exceeds maximum allowed length."));
+                                    continue;
+                                }
+
+                                break;
                         }
 
                         value = new byte[totallength];
+
                         Array.Copy(header, fieldposition, value, 0, totallength);
                     }
 
@@ -373,7 +467,9 @@ namespace ExifLibrary
                         thumboffset = (int)conv.ToUInt32(value, 0);
                     }
                     else if (currentifd == IFD.First && tag == 0x202)
+                    {
                         thumblength = (int)conv.ToUInt32(value, 0);
+                    }
 
                     // Uncompressed thumbnail data
                     if (currentifd == IFD.First && tag == 0x111)
@@ -381,9 +477,13 @@ namespace ExifLibrary
                         thumbtype = 1;
                         // Offset to first strip
                         if (type == 3)
+                        {
                             thumboffset = (int)conv.ToUInt16(value, 0);
+                        }
                         else
+                        {
                             thumboffset = (int)conv.ToUInt32(value, 0);
+                        }
                     }
                     else if (currentifd == IFD.First && tag == 0x117)
                     {
@@ -391,9 +491,13 @@ namespace ExifLibrary
                         for (int j = 0; j < count; j++)
                         {
                             if (type == 3)
+                            {
                                 thumblength += (int)conv.ToUInt16(value, 0);
+                            }
                             else
+                            {
                                 thumblength += (int)conv.ToUInt32(value, 0);
+                            }
                         }
                     }
 
@@ -406,9 +510,11 @@ namespace ExifLibrary
                 if (currentifd == IFD.Zeroth)
                 {
                     int firstifdoffset = ifdoffset + 2 + 12 * fieldcount;
+
                     if (firstifdoffset + 4 <= header.Length)
                     {
                         int firstifdpointer = (int)conv.ToUInt32(header, firstifdoffset);
+
                         if (firstifdpointer != 0)
                         {
                             if (firstifdpointer + 2 <= header.Length)
@@ -426,6 +532,8 @@ namespace ExifLibrary
                         Errors.Add(new ImageError(Severity.Warning, $"Invalid first IFD offset."));
                     }
                 }
+
+
                 // Read thumbnail
                 if (thumboffset != -1 && thumblength != 0 && Thumbnail == null)
                 {
@@ -453,15 +561,18 @@ namespace ExifLibrary
         private void ReadJFIFAPP0()
         {
             // Find the APP0 section containing JFIF metadata
-            jfifApp0 = Sections.Find(a => (a.Marker == JPEGMarker.APP0) &&
-                a.Header.Length >= 5 &&
-                (Encoding.ASCII.GetString(a.Header, 0, 5) == "JFIF\0"));
+            jfifApp0 = Sections.Find(a => (a.Marker == JPEGMarker.APP0)
+                && a.Header.Length >= 5
+                && (Encoding.ASCII.GetString(a.Header, 0, 5) == "JFIF\0"));
 
             // If there is no APP0 section, return.
             if (jfifApp0 == null)
+            {
                 return;
+            }
 
             byte[] header = jfifApp0.Header;
+
             BitConverterEx jfifConv = BitConverterEx.BigEndian;
 
             // Version
@@ -475,18 +586,21 @@ namespace ExifLibrary
             // X and Y densities
             ushort xdensity = jfifConv.ToUInt16(header, 8);
             Properties.Add(new ExifUShort(ExifTag.XDensity, xdensity));
+
             ushort ydensity = jfifConv.ToUInt16(header, 10);
             Properties.Add(new ExifUShort(ExifTag.YDensity, ydensity));
 
             // Thumbnails pixel count
             byte xthumbnail = header[12];
             Properties.Add(new ExifByte(ExifTag.JFIFXThumbnail, xthumbnail));
+
             byte ythumbnail = header[13];
             Properties.Add(new ExifByte(ExifTag.JFIFYThumbnail, ythumbnail));
 
             // Read JFIF thumbnail
             int n = xthumbnail * ythumbnail;
             byte[] jfifThumbnail = new byte[n];
+
             Array.Copy(header, 14, jfifThumbnail, 0, n);
             Properties.Add(new JFIFThumbnailProperty(ExifTag.JFIFThumbnail, new JFIFThumbnail(JFIFThumbnail.ImageFormat.JPEG, jfifThumbnail)));
         }
@@ -497,13 +611,15 @@ namespace ExifLibrary
         private void ReadJFXXAPP0()
         {
             // Find the APP0 section containing JFIF metadata
-            jfxxApp0 = Sections.Find(a => (a.Marker == JPEGMarker.APP0) &&
-                a.Header.Length >= 5 &&
-                (Encoding.ASCII.GetString(a.Header, 0, 5) == "JFXX\0"));
+            jfxxApp0 = Sections.Find(a => (a.Marker == JPEGMarker.APP0)
+                && a.Header.Length >= 5
+                && (Encoding.ASCII.GetString(a.Header, 0, 5) == "JFXX\0"));
 
             // If there is no APP0 section, return.
             if (jfxxApp0 == null)
+            {
                 return;
+            }
 
             byte[] header = jfxxApp0.Header;
 
@@ -515,7 +631,9 @@ namespace ExifLibrary
             if (version == JFIFExtension.ThumbnailJPEG)
             {
                 byte[] data = new byte[header.Length - 6];
+
                 Array.Copy(header, 6, data, 0, data.Length);
+
                 Properties.Add(new JFIFThumbnailProperty(ExifTag.JFXXThumbnail, new JFIFThumbnail(JFIFThumbnail.ImageFormat.JPEG, data)));
             }
             else if (version == JFIFExtension.Thumbnail24BitRGB)
@@ -523,8 +641,10 @@ namespace ExifLibrary
                 // Thumbnails pixel count
                 byte xthumbnail = header[6];
                 Properties.Add(new ExifByte(ExifTag.JFXXXThumbnail, xthumbnail));
+
                 byte ythumbnail = header[7];
                 Properties.Add(new ExifByte(ExifTag.JFXXYThumbnail, ythumbnail));
+
                 byte[] data = new byte[3 * xthumbnail * ythumbnail];
                 Array.Copy(header, 8, data, 0, data.Length);
                 Properties.Add(new JFIFThumbnailProperty(ExifTag.JFXXThumbnail, new JFIFThumbnail(JFIFThumbnail.ImageFormat.BMP24Bit, data)));
@@ -534,12 +654,16 @@ namespace ExifLibrary
                 // Thumbnails pixel count
                 byte xthumbnail = header[6];
                 Properties.Add(new ExifByte(ExifTag.JFXXXThumbnail, xthumbnail));
+
                 byte ythumbnail = header[7];
                 Properties.Add(new ExifByte(ExifTag.JFXXYThumbnail, ythumbnail));
+
                 byte[] palette = new byte[768];
                 Array.Copy(header, 8, palette, 0, palette.Length);
+
                 byte[] data = new byte[xthumbnail * ythumbnail];
                 Array.Copy(header, 8 + 768, data, 0, data.Length);
+
                 Properties.Add(new JFIFThumbnailProperty(ExifTag.JFXXThumbnail, new JFIFThumbnail(palette, data)));
             }
         }
@@ -554,36 +678,57 @@ namespace ExifLibrary
             gpsIFDFieldOffset = 0;
             interopIFDFieldOffset = 0;
             firstIFDFieldOffset = 0;
+
             // We also do not know the location of the embedded thumbnail yet
             thumbOffsetLocation = 0;
             thumbOffsetValue = 0;
             thumbSizeLocation = 0;
             thumbSizeValue = 0;
+
             // Write thumbnail tags if they are missing, remove otherwise
             ExifProperty thumbnailFormatProperty = null;
             ExifProperty thumbnailLengthProperty = null;
+
             foreach (var prop in Properties)
             {
                 if (prop.Tag == ExifTag.ThumbnailJPEGInterchangeFormat)
+                {
                     thumbnailFormatProperty = prop;
+                }
+
                 if (prop.Tag == ExifTag.ThumbnailJPEGInterchangeFormatLength)
+                {
                     thumbnailLengthProperty = prop;
+                }
+
                 if (thumbnailFormatProperty != null && thumbnailLengthProperty != null)
+                {
                     break;
+                }
             }
             if (Thumbnail == null)
             {
                 if (thumbnailFormatProperty != null)
+                {
                     Properties.Remove(thumbnailFormatProperty);
+                }
+
                 if (thumbnailLengthProperty != null)
+                {
                     Properties.Remove(thumbnailLengthProperty);
+                }
             }
             else
             {
                 if (thumbnailFormatProperty == null)
+                {
                     Properties.Add(new ExifUInt(ExifTag.ThumbnailJPEGInterchangeFormat, 0));
+                }
+
                 if (thumbnailLengthProperty == null)
+                {
                     Properties.Add(new ExifUInt(ExifTag.ThumbnailJPEGInterchangeFormatLength, 0));
+                }
             }
 
             // Which IFD sections do we have?
@@ -622,19 +767,35 @@ namespace ExifLibrary
             // Add IFD pointers if they are missing
             // We will write the pointer values later on
             if (ifdexif.Count != 0 && !ifdzeroth.ContainsKey(ExifTag.EXIFIFDPointer))
+            {
                 ifdzeroth[ExifTag.EXIFIFDPointer] = new ExifUInt(ExifTag.EXIFIFDPointer, 0);
+            }
+
             if (ifdgps.Count != 0 && !ifdzeroth.ContainsKey(ExifTag.GPSIFDPointer))
+            {
                 ifdzeroth[ExifTag.GPSIFDPointer] = new ExifUInt(ExifTag.GPSIFDPointer, 0);
+            }
+
             if (ifdinterop.Count != 0 && !ifdexif.ContainsKey(ExifTag.InteroperabilityIFDPointer))
+            {
                 ifdexif[ExifTag.InteroperabilityIFDPointer] = new ExifUInt(ExifTag.InteroperabilityIFDPointer, 0);
+            }
 
             // Remove IFD pointers if IFD sections are missing
             if (ifdexif.Count == 0 && ifdzeroth.ContainsKey(ExifTag.EXIFIFDPointer))
+            {
                 ifdzeroth.Remove(ExifTag.EXIFIFDPointer);
+            }
+
             if (ifdgps.Count == 0 && ifdzeroth.ContainsKey(ExifTag.GPSIFDPointer))
+            {
                 ifdzeroth.Remove(ExifTag.GPSIFDPointer);
+            }
+
             if (ifdinterop.Count == 0 && ifdexif.ContainsKey(ExifTag.InteroperabilityIFDPointer))
+            {
                 ifdexif.Remove(ExifTag.InteroperabilityIFDPointer);
+            }
 
             if (ifdzeroth.Count == 0 && ifdgps.Count == 0 && ifdinterop.Count == 0 && ifdfirst.Count == 0 && Thumbnail == null)
             {
@@ -656,20 +817,26 @@ namespace ExifLibrary
                 // Byte order
                 long tiffoffset = ms.Position;
                 ms.Write((ByteOrder == BitConverterEx.ByteOrder.LittleEndian ? new byte[] { 0x49, 0x49 } : new byte[] { 0x4D, 0x4D }), 0, 2);
+
                 // TIFF ID
                 ms.Write(bceExif.GetBytes((ushort)42), 0, 2);
+
                 // Offset to 0th IFD
                 ms.Write(bceExif.GetBytes((uint)8), 0, 4);
 
                 // Write IFDs
                 WriteIFD(ms, ifdzeroth, IFD.Zeroth, tiffoffset, preserveMakerNote);
                 uint exififdrelativeoffset = (uint)(ms.Position - tiffoffset);
+
                 WriteIFD(ms, ifdexif, IFD.EXIF, tiffoffset, preserveMakerNote);
                 uint gpsifdrelativeoffset = (uint)(ms.Position - tiffoffset);
+
                 WriteIFD(ms, ifdgps, IFD.GPS, tiffoffset, preserveMakerNote);
                 uint interopifdrelativeoffset = (uint)(ms.Position - tiffoffset);
+
                 WriteIFD(ms, ifdinterop, IFD.Interop, tiffoffset, preserveMakerNote);
                 uint firstifdrelativeoffset = (uint)(ms.Position - tiffoffset);
+
                 WriteIFD(ms, ifdfirst, IFD.First, tiffoffset, preserveMakerNote);
 
                 // Now that we now the location of IFDs we can go back and write IFD offsets
@@ -678,27 +845,32 @@ namespace ExifLibrary
                     ms.Seek(exifIFDFieldOffset, SeekOrigin.Begin);
                     ms.Write(bceExif.GetBytes(exififdrelativeoffset), 0, 4);
                 }
+
                 if (gpsIFDFieldOffset != 0)
                 {
                     ms.Seek(gpsIFDFieldOffset, SeekOrigin.Begin);
                     ms.Write(bceExif.GetBytes(gpsifdrelativeoffset), 0, 4);
                 }
+
                 if (interopIFDFieldOffset != 0)
                 {
                     ms.Seek(interopIFDFieldOffset, SeekOrigin.Begin);
                     ms.Write(bceExif.GetBytes(interopifdrelativeoffset), 0, 4);
                 }
+
                 if (firstIFDFieldOffset != 0)
                 {
                     ms.Seek(firstIFDFieldOffset, SeekOrigin.Begin);
                     ms.Write(bceExif.GetBytes(firstifdrelativeoffset), 0, 4);
                 }
+
                 // We can write thumbnail location now
                 if (thumbOffsetLocation != 0)
                 {
                     ms.Seek(thumbOffsetLocation, SeekOrigin.Begin);
                     ms.Write(bceExif.GetBytes(thumbOffsetValue), 0, 4);
                 }
+
                 if (thumbSizeLocation != 0)
                 {
                     ms.Seek(thumbSizeLocation, SeekOrigin.Begin);
@@ -717,12 +889,20 @@ namespace ExifLibrary
 
             // Create a queue of fields to write
             Queue<ExifProperty> fieldqueue = new Queue<ExifProperty>();
+
             foreach (ExifProperty prop in ifd.Values)
+            {
                 if (prop.Tag != ExifTag.MakerNote)
+                {
                     fieldqueue.Enqueue(prop);
+                }
+            }
+
             // Push the maker note data to the end
             if (ifd.ContainsKey(ExifTag.MakerNote))
+            {
                 fieldqueue.Enqueue(ifd[ExifTag.MakerNote]);
+            }
 
             // Offset to start of field data from start of TIFF header
             uint dataoffset = (uint)(2 + ifd.Count * 12 + 4 + stream.Position - tiffoffset);
@@ -730,8 +910,10 @@ namespace ExifLibrary
             long absolutedataoffset = stream.Position + (2 + ifd.Count * 12 + 4);
 
             bool makernotewritten = false;
+
             // Field count
             stream.Write(conv.GetBytes((ushort)ifd.Count), 0, 2);
+
             // Fields
             while (fieldqueue.Count != 0)
             {
@@ -741,14 +923,14 @@ namespace ExifLibrary
                 uint fillerbytecount = 0;
 
                 // Try to preserve the makernote data offset
-                if (!makernotewritten &&
-                    !makerNoteProcessed &&
-                    makerNoteOffset != 0 &&
-                    ifdtype == IFD.EXIF &&
-                    field.Tag != ExifTag.MakerNote &&
-                    interop.Data.Length > 4 &&
-                    currentdataoffset + interop.Data.Length > makerNoteOffset &&
-                    ifd.ContainsKey(ExifTag.MakerNote))
+                if (!makernotewritten
+                    && !makerNoteProcessed
+                    && makerNoteOffset != 0
+                    && ifdtype == IFD.EXIF
+                    && field.Tag != ExifTag.MakerNote
+                    && interop.Data.Length > 4
+                    && currentdataoffset + interop.Data.Length > makerNoteOffset
+                    && ifd.ContainsKey(ExifTag.MakerNote))
                 {
                     // Delay writing this field until we write makernote data
                     fieldqueue.Enqueue(field);
@@ -759,73 +941,109 @@ namespace ExifLibrary
                     makernotewritten = true;
                     // We may need to write filler bytes to preserve maker note offset
                     if (preserveMakerNote && !makerNoteProcessed && (makerNoteOffset > currentdataoffset))
+                    {
                         fillerbytecount = makerNoteOffset - currentdataoffset;
+                    }
                     else
+                    {
                         fillerbytecount = 0;
+                    }
                 }
 
                 // Tag
                 stream.Write(conv.GetBytes(interop.TagID), 0, 2);
+
                 // Type
                 stream.Write(conv.GetBytes((ushort)interop.TypeID), 0, 2);
+
                 // Count
                 stream.Write(conv.GetBytes(interop.Count), 0, 4);
+
                 // Field data
                 byte[] data = interop.Data;
+
                 if (ByteOrder != BitConverterEx.SystemByteOrder &&
                     (interop.TypeID == InterOpType.SHORT || interop.TypeID == InterOpType.LONG || interop.TypeID == InterOpType.SLONG ||
                     interop.TypeID == InterOpType.RATIONAL || interop.TypeID == InterOpType.SRATIONAL))
                 {
                     int vlen = 4;
+
                     if (interop.TypeID == InterOpType.SHORT)
+                    {
                         vlen = 2;
+                    }
+
                     int n = data.Length / vlen;
 
                     for (int i = 0; i < n; i++)
+                    {
                         Array.Reverse(data, i * vlen, vlen);
+                    }
                 }
 
                 // Fields containing offsets to other IFDs
                 // Just store their offets, we will write the values later on when we know the lengths of IFDs
                 if (ifdtype == IFD.Zeroth && interop.TagID == 0x8769)
+                {
                     exifIFDFieldOffset = stream.Position;
+                }
                 else if (ifdtype == IFD.Zeroth && interop.TagID == 0x8825)
+                {
                     gpsIFDFieldOffset = stream.Position;
+                }
                 else if (ifdtype == IFD.EXIF && interop.TagID == 0xa005)
+                {
                     interopIFDFieldOffset = stream.Position;
+                }
                 else if (ifdtype == IFD.First && interop.TagID == 0x201)
+                {
                     thumbOffsetLocation = stream.Position;
+                }
                 else if (ifdtype == IFD.First && interop.TagID == 0x202)
+                {
                     thumbSizeLocation = stream.Position;
+                }
 
                 // Write 4 byte field value or field data
                 if (data.Length <= 4)
                 {
                     stream.Write(data, 0, data.Length);
                     for (int i = data.Length; i < 4; i++)
+                    {
                         stream.WriteByte(0);
+                    }
                 }
                 else
                 {
                     // Pointer to data area relative to TIFF header
                     stream.Write(conv.GetBytes(currentdataoffset + fillerbytecount), 0, 4);
+
                     // Actual data
                     long currentoffset = stream.Position;
                     stream.Seek(absolutedataoffset, SeekOrigin.Begin);
+
                     // Write filler bytes
                     for (int i = 0; i < fillerbytecount; i++)
+                    {
                         stream.WriteByte(0xFF);
+                    }
+
                     stream.Write(data, 0, data.Length);
                     stream.Seek(currentoffset, SeekOrigin.Begin);
+
                     // Increment pointers
                     currentdataoffset += fillerbytecount + (uint)data.Length;
                     absolutedataoffset += fillerbytecount + data.Length;
                 }
             }
+
             // Offset to 1st IFD
             // We will write zeros for now. This will be filled after we write all IFDs
             if (ifdtype == IFD.Zeroth)
+            {
                 firstIFDFieldOffset = stream.Position;
+            }
+
             stream.Write(new byte[] { 0, 0, 0, 0 }, 0, 4);
 
             // Seek to end of IFD
@@ -855,10 +1073,13 @@ namespace ExifLibrary
         {
             // Which IFD sections do we have?
             Dictionary<ExifTag, ExifProperty> ifdjfefExisting = new Dictionary<ExifTag, ExifProperty>();
+
             foreach (ExifProperty prop in Properties)
             {
                 if (prop.IFD == IFD.JFIF)
+                {
                     ifdjfefExisting.Add(prop.Tag, prop);
+                }
             }
 
             if (ifdjfefExisting.Count == 0)
@@ -871,6 +1092,7 @@ namespace ExifLibrary
                     Sections.Remove(jfifApp0);
                     jfifApp0 = null;
                 }
+
                 return false;
             }
 
@@ -910,6 +1132,7 @@ namespace ExifLibrary
                 Errors.Add(new ImageError(Severity.Info, "Adding missing JFIF X density tag."));
                 ifdjfef.Add(new ExifUShort(ExifTag.XDensity, 1));
             }
+
             if (ifdjfefExisting.TryGetValue(ExifTag.YDensity, out ExifProperty ydensity))
             {
                 ifdjfef.Add(ydensity);
@@ -930,6 +1153,7 @@ namespace ExifLibrary
                 Errors.Add(new ImageError(Severity.Info, "Adding missing JFIF X thumbnail pixel count tag."));
                 ifdjfef.Add(new ExifByte(ExifTag.JFIFXThumbnail, 0));
             }
+            
             if (ifdjfefExisting.TryGetValue(ExifTag.JFIFYThumbnail, out ExifProperty ythumbnail))
             {
                 ifdjfef.Add(ythumbnail);
@@ -962,8 +1186,12 @@ namespace ExifLibrary
                 {
                     ExifInterOperability interop = prop.Interoperability;
                     byte[] data = interop.Data;
+            
                     if (BitConverterEx.SystemByteOrder != BitConverterEx.ByteOrder.BigEndian && interop.TypeID == InterOpType.SHORT)
+                    {
                         Array.Reverse(data);
+                    }
+                    
                     ms.Write(data, 0, data.Length);
                 }
 
@@ -980,10 +1208,13 @@ namespace ExifLibrary
         {
             // Which IFD sections do we have?
             List<ExifProperty> ifdjfef = new List<ExifProperty>();
+            
             foreach (ExifProperty prop in Properties)
             {
                 if (prop.IFD == IFD.JFXX)
+                {
                     ifdjfef.Add(prop);
+                }
             }
 
             if (ifdjfef.Count == 0)
@@ -995,6 +1226,7 @@ namespace ExifLibrary
                     Sections.Remove(jfxxApp0);
                     jfxxApp0 = null;
                 }
+                
                 return false;
             }
 
@@ -1009,8 +1241,12 @@ namespace ExifLibrary
                 {
                     ExifInterOperability interop = prop.Interoperability;
                     byte[] data = interop.Data;
+
                     if (BitConverterEx.SystemByteOrder != BitConverterEx.ByteOrder.BigEndian && interop.TypeID == InterOpType.SHORT)
+                    {
                         Array.Reverse(data);
+                    }
+
                     ms.Write(data, 0, data.Length);
                 }
 
@@ -1035,12 +1271,16 @@ namespace ExifLibrary
             {
                 // Section header (including length bytes) must not exceed 64 kB.
                 if (section.Header.Length + 2 > 64 * 1024)
+                {
                     throw new SectionExceeds64KBException();
+                }
 
                 // APP sections must have a header.
                 // Otherwise skip the entire section.
                 if (section.Marker >= JPEGMarker.APP0 && section.Marker <= JPEGMarker.APP15 && section.Header.Length == 0)
+                {
                     continue;
+                }
 
                 // Write section marker
                 stream.Write(new byte[] { 0xFF, (byte)section.Marker }, 0, 2);
@@ -1053,17 +1293,23 @@ namespace ExifLibrary
 
                     // Write section header
                     if (section.Header.Length != 0)
+                    {
                         stream.Write(section.Header, 0, section.Header.Length);
+                    }
                 }
 
                 // Write entropy coded data
                 if (section.EntropyData.Length != 0)
+                {
                     stream.Write(section.EntropyData, 0, section.EntropyData.Length);
+                }
             }
 
             // Write trailing data, if any
             if (TrailingData.Length != 0)
+            {
                 stream.Write(TrailingData, 0, TrailingData.Length);
+            }
         }
 
         /// <summary>

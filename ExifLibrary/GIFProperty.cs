@@ -17,7 +17,13 @@ namespace ExifLibrary
         }
 
         protected override object _Value
-        { get { return Value; } set { Value = (string)value; } }
+        {
+            get => Value;
+            set
+            {
+                Value = (string)value;
+            }
+        }
 
         protected internal GIFBlock InsertBefore { get; private set; }
 
@@ -32,12 +38,16 @@ namespace ExifLibrary
         }
 
         public new string Value
-        { get { return mValue; } set { mValue = value; } }
+        {
+            get => mValue;
+            set
+            {
+                mValue = value;
+            }
+        }
 
-        public static implicit operator string(GIFComment obj)
-        { return obj.mValue; }
+        public static implicit operator string(GIFComment obj) => obj.mValue;
 
-        public override string ToString()
-        { return mValue; }
+        public override string ToString() => mValue;
     }
 }

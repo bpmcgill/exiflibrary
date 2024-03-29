@@ -10,34 +10,40 @@ namespace ExifLibrary
     {
         protected string mValue;
 
-        public ExifAscii(ExifTag tag, string value, Encoding encoding)
-            : base(tag)
+        public ExifAscii(ExifTag tag, string value, Encoding encoding) : base(tag)
         {
             mValue = value;
             Encoding = encoding;
         }
 
         protected override object _Value
-        { get { return Value; } set { Value = (string)value; } }
+        {
+            get => Value;
+            set
+            {
+                Value = (string)value;
+            }
+        }
 
         public Encoding Encoding { get; private set; }
 
         public override ExifInterOperability Interoperability
         {
-            get
-            {
-                return new ExifInterOperability(ExifTagFactory.GetTagID(mTag), InterOpType.ASCII, (uint)mValue.Length + 1, ExifBitConverter.GetBytes(mValue, true, Encoding));
-            }
+            get => new ExifInterOperability(ExifTagFactory.GetTagID(mTag), InterOpType.ASCII, (uint)mValue.Length + 1, ExifBitConverter.GetBytes(mValue, true, Encoding));
         }
 
         public new string Value
-        { get { return mValue; } set { mValue = value; } }
+        {
+            get => mValue;
+            set
+            {
+                mValue = value;
+            }
+        }
 
-        public static implicit operator string(ExifAscii obj)
-        { return obj.mValue; }
+        public static implicit operator string(ExifAscii obj) => obj.mValue;
 
-        public override string ToString()
-        { return mValue; }
+        public override string ToString() => mValue;
     }
 
     /// <summary>
@@ -47,31 +53,37 @@ namespace ExifLibrary
     {
         protected byte mValue;
 
-        public ExifByte(ExifTag tag, byte value)
-            : base(tag)
+        public ExifByte(ExifTag tag, byte value) : base(tag)
         {
             mValue = value;
         }
 
         protected override object _Value
-        { get { return Value; } set { Value = Convert.ToByte(value); } }
-
-        public override ExifInterOperability Interoperability
         {
-            get
+            get => Value;
+            set
             {
-                return new ExifInterOperability(ExifTagFactory.GetTagID(mTag), InterOpType.BYTE, 1, new byte[] { mValue });
+                Value = Convert.ToByte(value);
             }
         }
 
+        public override ExifInterOperability Interoperability
+        {
+            get => new ExifInterOperability(ExifTagFactory.GetTagID(mTag), InterOpType.BYTE, 1, new byte[] { mValue });
+        }
+
         public new byte Value
-        { get { return mValue; } set { mValue = value; } }
+        {
+            get => mValue;
+            set
+            {
+                mValue = value;
+            }
+        }
 
-        public static implicit operator byte(ExifByte obj)
-        { return obj.mValue; }
+        public static implicit operator byte(ExifByte obj) => obj.mValue;
 
-        public override string ToString()
-        { return mValue.ToString(); }
+        public override string ToString() => mValue.ToString();
     }
 
     /// <summary>
@@ -81,42 +93,50 @@ namespace ExifLibrary
     {
         protected byte[] mValue;
 
-        public ExifByteArray(ExifTag tag, byte[] value)
-            : base(tag)
+        public ExifByteArray(ExifTag tag, byte[] value) : base(tag)
         {
             mValue = value;
         }
 
         protected override object _Value
-        { get { return Value; } set { Value = (byte[])value; } }
-
-        public override ExifInterOperability Interoperability
         {
-            get
+            get => Value;
+            set
             {
-                return new ExifInterOperability(ExifTagFactory.GetTagID(mTag), InterOpType.BYTE, (uint)mValue.Length, mValue);
+                Value = (byte[])value;
             }
         }
 
-        public new byte[] Value
-        { get { return mValue; } set { mValue = value; } }
-
-        static public implicit operator byte[](ExifByteArray obj)
+        public override ExifInterOperability Interoperability
         {
-            return obj.mValue;
+            get => new ExifInterOperability(ExifTagFactory.GetTagID(mTag), InterOpType.BYTE, (uint)mValue.Length, mValue);
         }
+
+        public new byte[] Value
+        {
+            get => mValue;
+            set
+            {
+                mValue = value;
+            }
+        }
+
+        static public implicit operator byte[](ExifByteArray obj) => obj.mValue;
 
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder();
             sb.Append('[');
+
             foreach (byte b in mValue)
             {
                 sb.Append(b);
                 sb.Append(' ');
             }
+
             sb.Remove(sb.Length - 1, 1);
             sb.Append(']');
+
             return sb.ToString();
         }
     }
@@ -128,31 +148,37 @@ namespace ExifLibrary
     {
         protected double mValue;
 
-        public ExifDouble(ExifTag tag, double value)
-            : base(tag)
+        public ExifDouble(ExifTag tag, double value) : base(tag)
         {
             mValue = value;
         }
 
         protected override object _Value
-        { get { return Value; } set { Value = Convert.ToDouble(value); } }
-
-        public override ExifInterOperability Interoperability
         {
-            get
+            get => Value;
+            set
             {
-                return new ExifInterOperability(ExifTagFactory.GetTagID(mTag), InterOpType.DOUBLE, 1, ExifBitConverter.GetBytes(mValue, BitConverterEx.SystemByteOrder, BitConverterEx.SystemByteOrder));
+                Value = Convert.ToDouble(value);
             }
         }
 
+        public override ExifInterOperability Interoperability
+        {
+            get => new ExifInterOperability(ExifTagFactory.GetTagID(mTag), InterOpType.DOUBLE, 1, ExifBitConverter.GetBytes(mValue, BitConverterEx.SystemByteOrder, BitConverterEx.SystemByteOrder));
+        }
+
         public new double Value
-        { get { return mValue; } set { mValue = value; } }
+        {
+            get => mValue;
+            set
+            {
+                mValue = value;
+            }
+        }
 
-        public static implicit operator double(ExifDouble obj)
-        { return obj.mValue; }
+        public static implicit operator double(ExifDouble obj) => obj.mValue;
 
-        public override string ToString()
-        { return mValue.ToString(); }
+        public override string ToString() => mValue.ToString();
     }
 
     /// <summary>
@@ -163,42 +189,51 @@ namespace ExifLibrary
     {
         protected double[] mValue;
 
-        public ExifDoubleArray(ExifTag tag, double[] value)
-            : base(tag)
+        public ExifDoubleArray(ExifTag tag, double[] value) : base(tag)
         {
             mValue = value;
         }
 
         protected override object _Value
-        { get { return Value; } set { Value = (double[])value; } }
-
-        public override ExifInterOperability Interoperability
         {
-            get
+            get => Value; 
+            set
             {
-                return new ExifInterOperability(ExifTagFactory.GetTagID(mTag), InterOpType.DOUBLE, (uint)mValue.Length, ExifBitConverter.GetBytes(mValue, BitConverterEx.SystemByteOrder));
+                Value = (double[])value;
             }
         }
 
-        public new double[] Value
-        { get { return mValue; } set { mValue = value; } }
-
-        static public implicit operator double[](ExifDoubleArray obj)
+        public override ExifInterOperability Interoperability
         {
-            return obj.mValue;
+            get => new ExifInterOperability(ExifTagFactory.GetTagID(mTag), InterOpType.DOUBLE, (uint)mValue.Length, ExifBitConverter.GetBytes(mValue, BitConverterEx.SystemByteOrder));
         }
+
+        public new double[] Value
+        {
+            get => mValue;
+            set
+            {
+                mValue = value;
+            }
+        }
+
+        static public implicit operator double[](ExifDoubleArray obj) => obj.mValue;
 
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder();
+
             sb.Append('[');
+
             foreach (float b in mValue)
             {
                 sb.Append(b);
                 sb.Append(' ');
             }
+
             sb.Remove(sb.Length - 1, 1);
             sb.Append(']');
+
             return sb.ToString();
         }
     }
@@ -210,31 +245,37 @@ namespace ExifLibrary
     {
         protected float mValue;
 
-        public ExifFloat(ExifTag tag, float value)
-            : base(tag)
+        public ExifFloat(ExifTag tag, float value) : base(tag)
         {
             mValue = value;
         }
 
         protected override object _Value
-        { get { return Value; } set { Value = Convert.ToSingle(value); } }
-
-        public override ExifInterOperability Interoperability
         {
-            get
+            get => Value;
+            set
             {
-                return new ExifInterOperability(ExifTagFactory.GetTagID(mTag), InterOpType.FLOAT, 1, ExifBitConverter.GetBytes(mValue, BitConverterEx.SystemByteOrder, BitConverterEx.SystemByteOrder));
+                Value = Convert.ToSingle(value);
             }
         }
 
+        public override ExifInterOperability Interoperability
+        {
+            get => new ExifInterOperability(ExifTagFactory.GetTagID(mTag), InterOpType.FLOAT, 1, ExifBitConverter.GetBytes(mValue, BitConverterEx.SystemByteOrder, BitConverterEx.SystemByteOrder));
+        }
+
         public new float Value
-        { get { return mValue; } set { mValue = value; } }
+        {
+            get => mValue;
+            set
+            {
+                mValue = value;
+            }
+        }
 
-        public static implicit operator float(ExifFloat obj)
-        { return obj.mValue; }
+        public static implicit operator float(ExifFloat obj) => obj.mValue;
 
-        public override string ToString()
-        { return mValue.ToString(); }
+        public override string ToString() => mValue.ToString();
     }
 
     /// <summary>
@@ -245,42 +286,51 @@ namespace ExifLibrary
     {
         protected float[] mValue;
 
-        public ExifFloatArray(ExifTag tag, float[] value)
-            : base(tag)
+        public ExifFloatArray(ExifTag tag, float[] value) : base(tag)
         {
             mValue = value;
         }
 
         protected override object _Value
-        { get { return Value; } set { Value = (float[])value; } }
-
-        public override ExifInterOperability Interoperability
         {
-            get
+            get => Value;
+            set
             {
-                return new ExifInterOperability(ExifTagFactory.GetTagID(mTag), InterOpType.FLOAT, (uint)mValue.Length, ExifBitConverter.GetBytes(mValue, BitConverterEx.SystemByteOrder));
+                Value = (float[])value;
             }
         }
 
-        public new float[] Value
-        { get { return mValue; } set { mValue = value; } }
-
-        static public implicit operator float[](ExifFloatArray obj)
+        public override ExifInterOperability Interoperability
         {
-            return obj.mValue;
+            get => new ExifInterOperability(ExifTagFactory.GetTagID(mTag), InterOpType.FLOAT, (uint)mValue.Length, ExifBitConverter.GetBytes(mValue, BitConverterEx.SystemByteOrder));
         }
+
+        public new float[] Value
+        {
+            get => mValue;
+            set
+            {
+                mValue = value;
+            }
+        }
+
+        static public implicit operator float[](ExifFloatArray obj) => obj.mValue;
 
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder();
+
             sb.Append('[');
+
             foreach (float b in mValue)
             {
                 sb.Append(b);
                 sb.Append(' ');
             }
+
             sb.Remove(sb.Length - 1, 1);
             sb.Append(']');
+
             return sb.ToString();
         }
     }
@@ -312,7 +362,9 @@ namespace ExifLibrary
         /// Gets the IFD section contaning this property.
         /// </summary>
         public IFD IFD
-        { get { return mIFD; } }
+        {
+            get => mIFD;
+        }
 
         /// <summary>
         /// Gets interoperability data for this property.
@@ -327,9 +379,13 @@ namespace ExifLibrary
             get
             {
                 if (mName == null || mName.Length == 0)
+                {
                     return ExifTagFactory.GetTagName(mTag);
+                }
                 else
+                {
                     return mName;
+                }
             }
             set
             {
@@ -341,13 +397,21 @@ namespace ExifLibrary
         /// Gets the Exif tag associated with this property.
         /// </summary>
         public ExifTag Tag
-        { get { return mTag; } }
+        {
+            get => mTag;
+        }
 
         /// <summary>
         /// Gets or sets the value of this property.
         /// </summary>
         public object Value
-        { get { return _Value; } set { _Value = value; } }
+        {
+            get => _Value;
+            set
+            {
+                _Value = value;
+            }
+        }
     }
 
     /// <summary>
@@ -357,31 +421,36 @@ namespace ExifLibrary
     {
         protected sbyte mValue;
 
-        public ExifSByte(ExifTag tag, sbyte value)
-            : base(tag)
+        public ExifSByte(ExifTag tag, sbyte value) : base(tag)
         {
             mValue = value;
         }
 
         protected override object _Value
-        { get { return Value; } set { Value = Convert.ToSByte(value); } }
-
-        public override ExifInterOperability Interoperability
         {
-            get
+            get => Value; set
             {
-                return new ExifInterOperability(ExifTagFactory.GetTagID(mTag), InterOpType.SBYTE, 1, new byte[] { (byte)mValue });
+                Value = Convert.ToSByte(value);
             }
         }
 
+        public override ExifInterOperability Interoperability
+        {
+            get => new ExifInterOperability(ExifTagFactory.GetTagID(mTag), InterOpType.SBYTE, 1, new byte[] { (byte)mValue });
+        }
+
         public new sbyte Value
-        { get { return mValue; } set { mValue = value; } }
+        {
+            get => mValue;
+            set
+            {
+                mValue = value;
+            }
+        }
 
-        public static implicit operator sbyte(ExifSByte obj)
-        { return obj.mValue; }
+        public static implicit operator sbyte(ExifSByte obj) => obj.mValue;
 
-        public override string ToString()
-        { return mValue.ToString(); }
+        public override string ToString() => mValue.ToString();
     }
 
     /// <summary>
@@ -391,44 +460,58 @@ namespace ExifLibrary
     {
         protected sbyte[] mValue;
 
-        public ExifSByteArray(ExifTag tag, sbyte[] value)
-            : base(tag)
+        public ExifSByteArray(ExifTag tag, sbyte[] value) : base(tag)
         {
             mValue = value;
         }
 
         protected override object _Value
-        { get { return Value; } set { Value = (sbyte[])value; } }
+        {
+            get => Value;
+            set
+            {
+                Value = (sbyte[])value;
+            }
+        }
 
         public override ExifInterOperability Interoperability
         {
             get
             {
                 byte[] data = new byte[mValue.Length];
+
                 Buffer.BlockCopy(mValue, 0, data, 0, mValue.Length);
+
                 return new ExifInterOperability(ExifTagFactory.GetTagID(mTag), InterOpType.SBYTE, (uint)data.Length, data);
             }
         }
 
         public new sbyte[] Value
-        { get { return mValue; } set { mValue = value; } }
-
-        static public implicit operator sbyte[](ExifSByteArray obj)
         {
-            return obj.mValue;
+            get => mValue;
+            set
+            {
+                mValue = value;
+            }
         }
+
+        static public implicit operator sbyte[](ExifSByteArray obj) => obj.mValue;
 
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder();
+
             sb.Append('[');
+
             foreach (sbyte b in mValue)
             {
                 sb.Append(b);
                 sb.Append(' ');
             }
+
             sb.Remove(sb.Length - 1, 1);
             sb.Append(']');
+
             return sb.ToString();
         }
     }
@@ -440,31 +523,37 @@ namespace ExifLibrary
     {
         protected int mValue;
 
-        public ExifSInt(ExifTag tag, int value)
-            : base(tag)
+        public ExifSInt(ExifTag tag, int value) : base(tag)
         {
             mValue = value;
         }
 
         protected override object _Value
-        { get { return Value; } set { Value = Convert.ToInt32(value); } }
-
-        public override ExifInterOperability Interoperability
         {
-            get
+            get => Value;
+            set
             {
-                return new ExifInterOperability(ExifTagFactory.GetTagID(mTag), InterOpType.SLONG, 1, ExifBitConverter.GetBytes(mValue, BitConverterEx.SystemByteOrder, BitConverterEx.SystemByteOrder));
+                Value = Convert.ToInt32(value);
             }
         }
 
+        public override ExifInterOperability Interoperability
+        {
+            get => new ExifInterOperability(ExifTagFactory.GetTagID(mTag), InterOpType.SLONG, 1, ExifBitConverter.GetBytes(mValue, BitConverterEx.SystemByteOrder, BitConverterEx.SystemByteOrder));
+        }
+
         public new int Value
-        { get { return mValue; } set { mValue = value; } }
+        {
+            get => mValue;
+            set
+            {
+                mValue = value;
+            }
+        }
 
-        public static implicit operator int(ExifSInt obj)
-        { return obj.mValue; }
+        public static implicit operator int(ExifSInt obj) => obj.mValue;
 
-        public override string ToString()
-        { return mValue.ToString(); }
+        public override string ToString() => mValue.ToString();
     }
 
     /// <summary>
@@ -475,42 +564,51 @@ namespace ExifLibrary
     {
         protected int[] mValue;
 
-        public ExifSIntArray(ExifTag tag, int[] value)
-            : base(tag)
+        public ExifSIntArray(ExifTag tag, int[] value) : base(tag)
         {
             mValue = value;
         }
 
         protected override object _Value
-        { get { return Value; } set { Value = (int[])value; } }
-
-        public override ExifInterOperability Interoperability
         {
-            get
+            get => Value;
+            set
             {
-                return new ExifInterOperability(ExifTagFactory.GetTagID(mTag), InterOpType.SLONG, (uint)mValue.Length, ExifBitConverter.GetBytes(mValue, BitConverterEx.SystemByteOrder));
+                Value = (int[])value;
             }
         }
 
-        public new int[] Value
-        { get { return mValue; } set { mValue = value; } }
-
-        static public implicit operator int[](ExifSIntArray obj)
+        public override ExifInterOperability Interoperability
         {
-            return obj.mValue;
+            get => new ExifInterOperability(ExifTagFactory.GetTagID(mTag), InterOpType.SLONG, (uint)mValue.Length, ExifBitConverter.GetBytes(mValue, BitConverterEx.SystemByteOrder));
         }
+
+        public new int[] Value
+        {
+            get => mValue;
+            set
+            {
+                mValue = value;
+            }
+        }
+
+        static public implicit operator int[](ExifSIntArray obj) => obj.mValue;
 
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder();
+
             sb.Append('[');
+
             foreach (int b in mValue)
             {
                 sb.Append(b);
                 sb.Append(' ');
             }
+
             sb.Remove(sb.Length - 1, 1);
             sb.Append(']');
+
             return sb.ToString();
         }
     }
@@ -523,45 +621,46 @@ namespace ExifLibrary
     {
         protected MathEx.Fraction32 mValue;
 
-        public ExifSRational(ExifTag tag, int numerator, int denominator)
-            : base(tag)
+        public ExifSRational(ExifTag tag, int numerator, int denominator) : base(tag)
         {
             mValue = new MathEx.Fraction32(numerator, denominator);
         }
 
-        public ExifSRational(ExifTag tag, MathEx.Fraction32 value)
-            : base(tag)
+        public ExifSRational(ExifTag tag, MathEx.Fraction32 value) : base(tag)
         {
             mValue = value;
         }
 
         protected override object _Value
-        { get { return Value; } set { Value = (MathEx.Fraction32)value; } }
-
-        public override ExifInterOperability Interoperability
         {
-            get
+            get => Value;
+            set
             {
-                return new ExifInterOperability(ExifTagFactory.GetTagID(mTag), InterOpType.SRATIONAL, 1, ExifBitConverter.GetBytes(mValue, BitConverterEx.SystemByteOrder));
+                Value = (MathEx.Fraction32)value;
             }
         }
 
-        public new MathEx.Fraction32 Value
-        { get { return mValue; } set { mValue = value; } }
-
-        public static explicit operator float(ExifSRational obj)
-        { return (float)obj.mValue; }
-
-        public int[] ToArray()
+        public override ExifInterOperability Interoperability
         {
-            return new int[] { mValue.Numerator, mValue.Denominator };
+            get => new ExifInterOperability(ExifTagFactory.GetTagID(mTag), InterOpType.SRATIONAL, 1, ExifBitConverter.GetBytes(mValue, BitConverterEx.SystemByteOrder));
         }
 
-        public float ToFloat()
-        { return (float)mValue; }
+        public new MathEx.Fraction32 Value
+        {
+            get => mValue;
+            set
+            {
+                mValue = value;
+            }
+        }
 
-        public override string ToString()
-        { return mValue.ToString(); }
+        public static explicit operator float(ExifSRational obj) => (float)obj.mValue;
+
+        public int[] ToArray() => new int[] { mValue.Numerator, mValue.Denominator };
+
+        public float ToFloat() => (float)mValue;
+
+        public override string ToString() => mValue.ToString();
     }
 
     /// <summary>
@@ -572,31 +671,43 @@ namespace ExifLibrary
     {
         protected MathEx.Fraction32[] mValue;
 
-        public ExifSRationalArray(ExifTag tag, MathEx.Fraction32[] value)
-            : base(tag)
+        public ExifSRationalArray(ExifTag tag, MathEx.Fraction32[] value) : base(tag)
         {
             mValue = value;
         }
 
         protected override object _Value
-        { get { return Value; } set { Value = (MathEx.Fraction32[])value; } }
-
-        public override ExifInterOperability Interoperability
         {
-            get
+            get => Value;
+            set
             {
-                return new ExifInterOperability(ExifTagFactory.GetTagID(mTag), InterOpType.SRATIONAL, (uint)mValue.Length, ExifBitConverter.GetBytes(mValue, BitConverterEx.SystemByteOrder));
+                Value = (MathEx.Fraction32[])value;
             }
         }
 
+        public override ExifInterOperability Interoperability
+        {
+            get => new ExifInterOperability(ExifTagFactory.GetTagID(mTag), InterOpType.SRATIONAL, (uint)mValue.Length, ExifBitConverter.GetBytes(mValue, BitConverterEx.SystemByteOrder));
+        }
+
         public new MathEx.Fraction32[] Value
-        { get { return mValue; } set { mValue = value; } }
+        {
+            get => mValue;
+            set
+            {
+                mValue = value;
+            }
+        }
 
         static public explicit operator float[](ExifSRationalArray obj)
         {
             float[] result = new float[obj.mValue.Length];
+
             for (int i = 0; i < obj.mValue.Length; i++)
+            {
                 result[i] = (float)obj.mValue[i];
+            }
+
             return result;
         }
 
@@ -604,13 +715,16 @@ namespace ExifLibrary
         {
             StringBuilder sb = new StringBuilder();
             sb.Append('[');
+
             foreach (MathEx.Fraction32 b in mValue)
             {
                 sb.Append(b.ToString());
                 sb.Append(' ');
             }
+
             sb.Remove(sb.Length - 1, 1);
             sb.Append(']');
+
             return sb.ToString();
         }
     }
@@ -622,31 +736,37 @@ namespace ExifLibrary
     {
         protected short mValue;
 
-        public ExifSShort(ExifTag tag, short value)
-            : base(tag)
+        public ExifSShort(ExifTag tag, short value) : base(tag)
         {
             mValue = value;
         }
 
         protected override object _Value
-        { get { return Value; } set { Value = Convert.ToInt16(value); } }
-
-        public override ExifInterOperability Interoperability
         {
-            get
+            get => Value;
+            set
             {
-                return new ExifInterOperability(ExifTagFactory.GetTagID(mTag), InterOpType.SSHORT, 1, ExifBitConverter.GetBytes(mValue, BitConverterEx.SystemByteOrder, BitConverterEx.SystemByteOrder));
+                Value = Convert.ToInt16(value);
             }
         }
 
+        public override ExifInterOperability Interoperability
+        {
+            get => new ExifInterOperability(ExifTagFactory.GetTagID(mTag), InterOpType.SSHORT, 1, ExifBitConverter.GetBytes(mValue, BitConverterEx.SystemByteOrder, BitConverterEx.SystemByteOrder));
+        }
+
         public new short Value
-        { get { return mValue; } set { mValue = value; } }
+        {
+            get => mValue;
+            set
+            {
+                mValue = value;
+            }
+        }
 
-        public static implicit operator short(ExifSShort obj)
-        { return obj.mValue; }
+        public static implicit operator short(ExifSShort obj) => obj.mValue;
 
-        public override string ToString()
-        { return mValue.ToString(); }
+        public override string ToString() => mValue.ToString();
     }
 
     /// <summary>
@@ -657,42 +777,51 @@ namespace ExifLibrary
     {
         protected short[] mValue;
 
-        public ExifSShortArray(ExifTag tag, short[] value)
-            : base(tag)
+        public ExifSShortArray(ExifTag tag, short[] value) : base(tag)
         {
             mValue = value;
         }
 
         protected override object _Value
-        { get { return Value; } set { Value = (short[])value; } }
-
-        public override ExifInterOperability Interoperability
         {
-            get
+            get => Value;
+            set
             {
-                return new ExifInterOperability(ExifTagFactory.GetTagID(mTag), InterOpType.SSHORT, (uint)mValue.Length, ExifBitConverter.GetBytes(mValue, BitConverterEx.SystemByteOrder));
+                Value = (short[])value;
             }
         }
 
+        public override ExifInterOperability Interoperability
+        {
+            get => new ExifInterOperability(ExifTagFactory.GetTagID(mTag), InterOpType.SSHORT, (uint)mValue.Length, ExifBitConverter.GetBytes(mValue, BitConverterEx.SystemByteOrder));
+        }
+
         public new short[] Value
-        { get { return mValue; } set { mValue = value; } }
+        {
+            get => mValue;
+            set
+            {
+                mValue = value;
+            }
+        }
 
         static public implicit operator short[](ExifSShortArray obj)
-        {
-            return obj.mValue;
-        }
+        => obj.mValue;
 
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder();
             sb.Append('[');
+
             foreach (ushort b in mValue)
             {
                 sb.Append(b);
                 sb.Append(' ');
             }
+
             sb.Remove(sb.Length - 1, 1);
             sb.Append(']');
+
             return sb.ToString();
         }
     }
@@ -704,31 +833,40 @@ namespace ExifLibrary
     {
         protected uint mValue;
 
-        public ExifUInt(ExifTag tag, uint value)
-            : base(tag)
+        public ExifUInt(ExifTag tag, uint value) : base(tag)
         {
             mValue = value;
         }
 
         protected override object _Value
-        { get { return Value; } set { Value = Convert.ToUInt32(value); } }
-
-        public override ExifInterOperability Interoperability
         {
-            get
+            get => Value; set
             {
-                return new ExifInterOperability(ExifTagFactory.GetTagID(mTag), InterOpType.LONG, 1, ExifBitConverter.GetBytes(mValue, BitConverterEx.SystemByteOrder, BitConverterEx.SystemByteOrder));
+                Value = Convert.ToUInt32(value);
             }
         }
 
+        public override ExifInterOperability Interoperability
+        {
+            get => new ExifInterOperability(ExifTagFactory.GetTagID(mTag), InterOpType.LONG, 1, ExifBitConverter.GetBytes(mValue, BitConverterEx.SystemByteOrder, BitConverterEx.SystemByteOrder));
+        }
+
         public new uint Value
-        { get { return mValue; } set { mValue = value; } }
+        {
+            get => mValue;
+            set
+            {
+                mValue = value;
+            }
+        }
 
         public static implicit operator uint(ExifUInt obj)
-        { return obj.mValue; }
+        => obj.mValue;
 
         public override string ToString()
-        { return mValue.ToString(); }
+        {
+            return mValue.ToString();
+        }
     }
 
     /// <summary>
@@ -739,42 +877,52 @@ namespace ExifLibrary
     {
         protected uint[] mValue;
 
-        public ExifUIntArray(ExifTag tag, uint[] value)
-            : base(tag)
+        public ExifUIntArray(ExifTag tag, uint[] value) : base(tag)
         {
             mValue = value;
         }
 
         protected override object _Value
-        { get { return Value; } set { Value = (uint[])value; } }
-
-        public override ExifInterOperability Interoperability
         {
-            get
+            get => Value;
+            set
             {
-                return new ExifInterOperability(ExifTagFactory.GetTagID(mTag), InterOpType.LONG, (uint)mValue.Length, ExifBitConverter.GetBytes(mValue, BitConverterEx.SystemByteOrder));
+                Value = (uint[])value;
             }
         }
 
+        public override ExifInterOperability Interoperability
+        {
+            get => new ExifInterOperability(ExifTagFactory.GetTagID(mTag), InterOpType.LONG, (uint)mValue.Length, ExifBitConverter.GetBytes(mValue, BitConverterEx.SystemByteOrder));
+        }
+
         public new uint[] Value
-        { get { return mValue; } set { mValue = value; } }
+        {
+            get => mValue;
+            set
+            {
+                mValue = value;
+            }
+        }
 
         static public implicit operator uint[](ExifUIntArray obj)
-        {
-            return obj.mValue;
-        }
+        => obj.mValue;
 
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder();
+
             sb.Append('[');
+
             foreach (uint b in mValue)
             {
                 sb.Append(b);
                 sb.Append(' ');
             }
+
             sb.Remove(sb.Length - 1, 1);
             sb.Append(']');
+
             return sb.ToString();
         }
     }
@@ -786,42 +934,51 @@ namespace ExifLibrary
     {
         protected byte[] mValue;
 
-        public ExifUndefined(ExifTag tag, byte[] value)
-            : base(tag)
+        public ExifUndefined(ExifTag tag, byte[] value) : base(tag)
         {
             mValue = value;
         }
 
         protected override object _Value
-        { get { return Value; } set { Value = (byte[])value; } }
-
-        public override ExifInterOperability Interoperability
         {
-            get
+            get => Value;
+            set
             {
-                return new ExifInterOperability(ExifTagFactory.GetTagID(mTag), InterOpType.UNDEFINED, (uint)mValue.Length, mValue);
+                Value = (byte[])value;
             }
         }
 
-        public new byte[] Value
-        { get { return mValue; } set { mValue = value; } }
-
-        static public implicit operator byte[](ExifUndefined obj)
+        public override ExifInterOperability Interoperability
         {
-            return obj.mValue;
+            get => new ExifInterOperability(ExifTagFactory.GetTagID(mTag), InterOpType.UNDEFINED, (uint)mValue.Length, mValue);
         }
+
+        public new byte[] Value
+        {
+            get => mValue;
+            set
+            {
+                mValue = value;
+            }
+        }
+
+        static public implicit operator byte[](ExifUndefined obj) => obj.mValue;
 
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder();
+
             sb.Append('[');
+
             foreach (byte b in mValue)
             {
                 sb.Append(b);
                 sb.Append(' ');
             }
+
             sb.Remove(sb.Length - 1, 1);
             sb.Append(']');
+
             return sb.ToString();
         }
     }
@@ -834,45 +991,46 @@ namespace ExifLibrary
     {
         protected MathEx.UFraction32 mValue;
 
-        public ExifURational(ExifTag tag, uint numerator, uint denominator)
-            : base(tag)
+        public ExifURational(ExifTag tag, uint numerator, uint denominator) : base(tag)
         {
             mValue = new MathEx.UFraction32(numerator, denominator);
         }
 
-        public ExifURational(ExifTag tag, MathEx.UFraction32 value)
-            : base(tag)
+        public ExifURational(ExifTag tag, MathEx.UFraction32 value) : base(tag)
         {
             mValue = value;
         }
 
         protected override object _Value
-        { get { return Value; } set { Value = (MathEx.UFraction32)value; } }
-
-        public override ExifInterOperability Interoperability
         {
-            get
+            get => Value;
+            set
             {
-                return new ExifInterOperability(ExifTagFactory.GetTagID(mTag), InterOpType.RATIONAL, 1, ExifBitConverter.GetBytes(mValue, BitConverterEx.SystemByteOrder));
+                Value = (MathEx.UFraction32)value;
             }
         }
 
-        public new MathEx.UFraction32 Value
-        { get { return mValue; } set { mValue = value; } }
-
-        public static explicit operator float(ExifURational obj)
-        { return (float)obj.mValue; }
-
-        public uint[] ToArray()
+        public override ExifInterOperability Interoperability
         {
-            return new uint[] { mValue.Numerator, mValue.Denominator };
+            get => new ExifInterOperability(ExifTagFactory.GetTagID(mTag), InterOpType.RATIONAL, 1, ExifBitConverter.GetBytes(mValue, BitConverterEx.SystemByteOrder));
         }
 
-        public float ToFloat()
-        { return (float)mValue; }
+        public new MathEx.UFraction32 Value
+        {
+            get => mValue;
+            set
+            {
+                mValue = value;
+            }
+        }
 
-        public override string ToString()
-        { return mValue.ToString(); }
+        public static explicit operator float(ExifURational obj) => (float)obj.mValue;
+
+        public uint[] ToArray() => new uint[] { mValue.Numerator, mValue.Denominator };
+
+        public float ToFloat() => (float)mValue;
+
+        public override string ToString() => mValue.ToString();
     }
 
     /// <summary>
@@ -883,31 +1041,43 @@ namespace ExifLibrary
     {
         protected MathEx.UFraction32[] mValue;
 
-        public ExifURationalArray(ExifTag tag, MathEx.UFraction32[] value)
-            : base(tag)
+        public ExifURationalArray(ExifTag tag, MathEx.UFraction32[] value) : base(tag)
         {
             mValue = value;
         }
 
         protected override object _Value
-        { get { return Value; } set { Value = (MathEx.UFraction32[])value; } }
-
-        public override ExifInterOperability Interoperability
         {
-            get
+            get => Value;
+            set
             {
-                return new ExifInterOperability(ExifTagFactory.GetTagID(mTag), InterOpType.RATIONAL, (uint)mValue.Length, ExifBitConverter.GetBytes(mValue, BitConverterEx.SystemByteOrder));
+                Value = (MathEx.UFraction32[])value;
             }
         }
 
+        public override ExifInterOperability Interoperability
+        {
+            get => new ExifInterOperability(ExifTagFactory.GetTagID(mTag), InterOpType.RATIONAL, (uint)mValue.Length, ExifBitConverter.GetBytes(mValue, BitConverterEx.SystemByteOrder));
+        }
+
         public new MathEx.UFraction32[] Value
-        { get { return mValue; } set { mValue = value; } }
+        {
+            get => mValue;
+            set
+            {
+                mValue = value;
+            }
+        }
 
         static public explicit operator float[](ExifURationalArray obj)
         {
             float[] result = new float[obj.mValue.Length];
+
             for (int i = 0; i < obj.mValue.Length; i++)
+            {
                 result[i] = (float)obj.mValue[i];
+            }
+
             return result;
         }
 
@@ -915,13 +1085,16 @@ namespace ExifLibrary
         {
             StringBuilder sb = new StringBuilder();
             sb.Append('[');
+
             foreach (MathEx.UFraction32 b in mValue)
             {
                 sb.Append(b.ToString());
                 sb.Append(' ');
             }
+
             sb.Remove(sb.Length - 1, 1);
             sb.Append(']');
+
             return sb.ToString();
         }
     }
@@ -933,31 +1106,37 @@ namespace ExifLibrary
     {
         protected ushort mValue;
 
-        public ExifUShort(ExifTag tag, ushort value)
-            : base(tag)
+        public ExifUShort(ExifTag tag, ushort value) : base(tag)
         {
             mValue = value;
         }
 
         protected override object _Value
-        { get { return Value; } set { Value = Convert.ToUInt16(value); } }
-
-        public override ExifInterOperability Interoperability
         {
-            get
+            get => Value;
+            set
             {
-                return new ExifInterOperability(ExifTagFactory.GetTagID(mTag), InterOpType.SHORT, 1, ExifBitConverter.GetBytes(mValue, BitConverterEx.SystemByteOrder, BitConverterEx.SystemByteOrder));
+                Value = Convert.ToUInt16(value);
             }
         }
 
+        public override ExifInterOperability Interoperability
+        {
+            get => new ExifInterOperability(ExifTagFactory.GetTagID(mTag), InterOpType.SHORT, 1, ExifBitConverter.GetBytes(mValue, BitConverterEx.SystemByteOrder, BitConverterEx.SystemByteOrder));
+        }
+
         public new ushort Value
-        { get { return mValue; } set { mValue = value; } }
+        {
+            get => mValue;
+            set
+            {
+                mValue = value;
+            }
+        }
 
-        public static implicit operator ushort(ExifUShort obj)
-        { return obj.mValue; }
+        public static implicit operator ushort(ExifUShort obj) => obj.mValue;
 
-        public override string ToString()
-        { return mValue.ToString(); }
+        public override string ToString() => mValue.ToString();
     }
 
     /// <summary>
@@ -968,42 +1147,51 @@ namespace ExifLibrary
     {
         protected ushort[] mValue;
 
-        public ExifUShortArray(ExifTag tag, ushort[] value)
-            : base(tag)
+        public ExifUShortArray(ExifTag tag, ushort[] value) : base(tag)
         {
             mValue = value;
         }
 
         protected override object _Value
-        { get { return Value; } set { Value = (ushort[])value; } }
-
-        public override ExifInterOperability Interoperability
         {
-            get
+            get => Value;
+            set
             {
-                return new ExifInterOperability(ExifTagFactory.GetTagID(mTag), InterOpType.SHORT, (uint)mValue.Length, ExifBitConverter.GetBytes(mValue, BitConverterEx.SystemByteOrder));
+                Value = (ushort[])value;
             }
         }
 
-        public new ushort[] Value
-        { get { return mValue; } set { mValue = value; } }
-
-        static public implicit operator ushort[](ExifUShortArray obj)
+        public override ExifInterOperability Interoperability
         {
-            return obj.mValue;
+            get => new ExifInterOperability(ExifTagFactory.GetTagID(mTag), InterOpType.SHORT, (uint)mValue.Length, ExifBitConverter.GetBytes(mValue, BitConverterEx.SystemByteOrder));
         }
+
+        public new ushort[] Value
+        {
+            get => mValue;
+            set
+            {
+                mValue = value;
+            }
+        }
+
+        static public implicit operator ushort[](ExifUShortArray obj) => obj.mValue;
 
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder();
+
             sb.Append('[');
+
             foreach (ushort b in mValue)
             {
                 sb.Append(b);
                 sb.Append(' ');
             }
+
             sb.Remove(sb.Length - 1, 1);
             sb.Append(']');
+
             return sb.ToString();
         }
     }

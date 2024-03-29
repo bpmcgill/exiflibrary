@@ -50,22 +50,14 @@ namespace ExifLibrary
         /// <param name="type">Type identifier.</param>
         private static uint GetBaseLength(ushort type)
         {
-            if (type == 1 || type == 6) // BYTE and SBYTE
-                return 1;
-            else if (type == 2 || type == 7) // ASCII and UNDEFINED
-                return 1;
-            else if (type == 3 || type == 8) // SHORT and SSHORT
-                return 2;
-            else if (type == 4 || type == 9) // LONG and SLONG
-                return 4;
-            else if (type == 5 || type == 10) // RATIONAL (2xLONG) and SRATIONAL (2xSLONG)
-                return 8;
-            else if (type == 11) // FLOAT
-                return 4;
-            else if (type == 12) // DOUBLE
-                return 8;
-
-            throw new ArgumentException("Unknown type identifier.", "type");
+            return type switch
+            {
+                1 or 6 or 2 or 7 => 1, // BYTE, SBYTE, ASCII, UNDEFINED
+                3 or 8 => 2, // SHORT, SSHORT
+                4 or 9 or 11 => 4, // LONG, SLONG, FLOAT
+                5 or 10 or 12 => 8, // RATIONAL, SRATIONAL, DOUBLE
+                _ => throw new ArgumentException("Unknown type identifier.", nameof(type)),
+            };
         }
 
         /// <summary>
@@ -88,6 +80,7 @@ namespace ExifLibrary
 
             // Field value or offset to field data
             byte[] value = new byte[4];
+
             Array.Copy(data, (int)offset + 8, value, 0, 4);
 
             // Calculate the bytes we need to read
@@ -100,7 +93,9 @@ namespace ExifLibrary
             if (totallength > 4)
             {
                 uint dataoffset = BitConverterEx.ToUInt32(value, 0, byteOrder, BitConverterEx.SystemByteOrder);
+
                 value = new byte[totallength];
+
                 Array.Copy(data, (int)dataoffset, value, 0, (int)totallength);
             }
 
@@ -110,6 +105,7 @@ namespace ExifLibrary
                 for (int i = 0; i < count; i++)
                 {
                     byte[] val = new byte[baselength];
+
                     Array.Copy(value, i * (int)baselength, val, 0, (int)baselength);
                     Array.Reverse(val);
                     Array.Copy(val, 0, value, i * (int)baselength, (int)baselength);

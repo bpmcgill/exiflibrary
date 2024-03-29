@@ -96,8 +96,11 @@ namespace ExifLibrary
             // Read the TIFF header
             TIFFHeader = TIFFHeader.FromBytes(data, 0);
             uint nextIFDOffset = TIFFHeader.IFDOffset;
+
             if (nextIFDOffset == 0)
+            {
                 throw new NotValidTIFFileException("The first IFD offset is zero.");
+            }
 
             // Read IFDs in order
             while (nextIFDOffset != 0)
@@ -151,11 +154,13 @@ namespace ExifLibrary
                 if (i == 0)
                 {
                     var ifdZeroth = new Dictionary<ushort, ImageFileDirectoryEntry>();
+
                     foreach (var prop in Properties)
                     {
                         if (prop.IFD == IFD.Zeroth)
                         {
                             var interop = prop.Interoperability;
+
                             if (ifdZeroth.TryGetValue(interop.TagID, out var field))
                             {
                                 field.Count = interop.Count;
@@ -178,15 +183,20 @@ namespace ExifLibrary
                 // Write strips first
                 byte[] stripOffsets = new byte[4 * ifd.Strips.Count];
                 byte[] stripLengths = new byte[4 * ifd.Strips.Count];
+
                 uint stripOffset = ifdoffset;
+
                 for (int j = 0; j < ifd.Strips.Count; j++)
                 {
                     byte[] stripData = ifd.Strips[j].Data;
                     byte[] oBytes = BitConverter.GetBytes(stripOffset);
                     byte[] lBytes = BitConverter.GetBytes((uint)stripData.Length);
+
                     Array.Copy(oBytes, 0, stripOffsets, 4 * j, 4);
                     Array.Copy(lBytes, 0, stripLengths, 4 * j, 4);
+
                     stream.Write(stripData, 0, stripData.Length);
+
                     stripOffset += (uint)stripData.Length;
                 }
 
@@ -194,8 +204,11 @@ namespace ExifLibrary
                 for (int j = ifd.Fields.Count - 1; j > 0; j--)
                 {
                     ushort tag = ifd.Fields[j].Tag;
+
                     if (tag == 273 || tag == 279)
+                    {
                         ifd.Fields.RemoveAt(j);
+                    }
                 }
                 // Write new strip tags
                 ifd.Fields.Add(new ImageFileDirectoryEntry(273, 4, (uint)ifd.Strips.Count, stripOffsets));
@@ -231,8 +244,11 @@ namespace ExifLibrary
                     if (data.Length <= 4)
                     {
                         stream.Write(data, 0, data.Length);
+
                         for (int j = data.Length; j < 4; j++)
+                        {
                             stream.WriteByte(0);
+                        }
                     }
                     else
                     {

@@ -10,6 +10,10 @@ namespace ExifTest
     {
         private IComparer mComparer;
 
+        public int SortColumn { get; set; }
+        public SortOrder SortOrder { get; set; }
+        public IComparer Comparer { get { return mComparer; } }
+
         public ListViewColumnSorter()
         {
             SortColumn = 0;
@@ -25,13 +29,6 @@ namespace ExifTest
 
             mComparer = comparer;
         }
-
-        public IComparer Comparer
-        { get { return mComparer; } }
-
-        public int SortColumn { get; set; }
-
-        public SortOrder SortOrder { get; set; }
 
         public int Compare(object x, object y)
         {

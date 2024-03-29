@@ -22,266 +22,306 @@ namespace ExifLibrary
         public static ExifProperty Get(ushort tag, ushort type, uint count, byte[] value, BitConverterEx.ByteOrder byteOrder, IFD ifd, Encoding encoding)
         {
             BitConverterEx conv = new BitConverterEx(byteOrder, BitConverterEx.SystemByteOrder);
+
             // Find the exif tag corresponding to given tag id
             ExifTag etag = ExifTagFactory.GetExifTag(ifd, tag);
 
-            if (ifd == IFD.Zeroth)
+            switch (ifd)
             {
-                if (tag == 0x103) // Compression
-                    return new ExifEnumProperty<Compression>(ExifTag.Compression, (Compression)conv.ToUInt16(value, 0));
-                else if (tag == 0x106) // PhotometricInterpretation
-                    return new ExifEnumProperty<PhotometricInterpretation>(ExifTag.PhotometricInterpretation, (PhotometricInterpretation)conv.ToUInt16(value, 0));
-                else if (tag == 0x112) // Orientation
-                    return new ExifEnumProperty<Orientation>(ExifTag.Orientation, (Orientation)conv.ToUInt16(value, 0));
-                else if (tag == 0x11c) // PlanarConfiguration
-                    return new ExifEnumProperty<PlanarConfiguration>(ExifTag.PlanarConfiguration, (PlanarConfiguration)conv.ToUInt16(value, 0));
-                else if (tag == 0x213) // YCbCrPositioning
-                    return new ExifEnumProperty<YCbCrPositioning>(ExifTag.YCbCrPositioning, (YCbCrPositioning)conv.ToUInt16(value, 0));
-                else if (tag == 0x128) // ResolutionUnit
-                    return new ExifEnumProperty<ResolutionUnit>(ExifTag.ResolutionUnit, (ResolutionUnit)conv.ToUInt16(value, 0));
-                else if (tag == 0x132) // DateTime
-                    return new ExifDateTime(ExifTag.DateTime, ExifBitConverter.ToDateTime(value));
-                else if (tag == 0x9c9b || tag == 0x9c9c ||  // Windows tags
-                    tag == 0x9c9d || tag == 0x9c9e || tag == 0x9c9f)
-                    return new WindowsByteString(etag, Encoding.Unicode.GetString(value).TrimEnd('\0'));
-            }
-            else if (ifd == IFD.EXIF)
-            {
-                if (tag == 0x9000) // ExifVersion
-                    return new ExifVersion(ExifTag.ExifVersion, ExifBitConverter.ToAscii(value, Encoding.ASCII));
-                else if (tag == 0xa000) // FlashpixVersion
-                    return new ExifVersion(ExifTag.FlashpixVersion, ExifBitConverter.ToAscii(value, Encoding.ASCII));
-                else if (tag == 0xa001) // ColorSpace
-                    return new ExifEnumProperty<ColorSpace>(ExifTag.ColorSpace, (ColorSpace)conv.ToUInt16(value, 0));
-                else if (tag == 0x9286) // UserComment
-                {
-                    // Default to ASCII
-                    Encoding enc = Encoding.ASCII;
-                    bool hasenc;
-                    if (value.Length < 8)
-                        hasenc = false;
-                    else
+                case IFD.Zeroth:
+                    switch (tag) // Compression
                     {
-                        hasenc = true;
-                        string encstr = enc.GetString(value, 0, 8);
-                        if (string.Compare(encstr, "ASCII\0\0\0", StringComparison.OrdinalIgnoreCase) == 0)
-                            enc = Encoding.ASCII;
-                        else if (string.Compare(encstr, "JIS\0\0\0\0\0", StringComparison.OrdinalIgnoreCase) == 0)
-                            enc = Encoding.GetEncoding("Japanese (JIS 0208-1990 and 0212-1990)");
-                        else if (string.Compare(encstr, "Unicode\0", StringComparison.OrdinalIgnoreCase) == 0)
-                            enc = Encoding.Unicode;
-                        else
-                            hasenc = false;
+                        case 0x103:
+                            return new ExifEnumProperty<Compression>(ExifTag.Compression, (Compression)conv.ToUInt16(value, 0));
+                        case 0x106:
+                            return new ExifEnumProperty<PhotometricInterpretation>(ExifTag.PhotometricInterpretation, (PhotometricInterpretation)conv.ToUInt16(value, 0));
+                        case 0x112:
+                            return new ExifEnumProperty<Orientation>(ExifTag.Orientation, (Orientation)conv.ToUInt16(value, 0));
+                        case 0x11c:
+                            return new ExifEnumProperty<PlanarConfiguration>(ExifTag.PlanarConfiguration, (PlanarConfiguration)conv.ToUInt16(value, 0));
+                        case 0x213:
+                            return new ExifEnumProperty<YCbCrPositioning>(ExifTag.YCbCrPositioning, (YCbCrPositioning)conv.ToUInt16(value, 0));
+                        case 0x128:
+                            return new ExifEnumProperty<ResolutionUnit>(ExifTag.ResolutionUnit, (ResolutionUnit)conv.ToUInt16(value, 0));
+                        case 0x132:
+                            return new ExifDateTime(ExifTag.DateTime, ExifBitConverter.ToDateTime(value));
+                        case 0x9c9b:
+                        case 0x9c9c:
+                        case 0x9c9d:
+                        case 0x9c9e:
+                        case 0x9c9f:
+                            return new WindowsByteString(etag, Encoding.Unicode.GetString(value).TrimEnd('\0'));
+                    }
+                    break;
+                case IFD.EXIF:
+                    {
+                        switch (tag) // ExifVersion
+                        {
+                            case 0x9000:
+                                return new ExifVersion(ExifTag.ExifVersion, ExifBitConverter.ToAscii(value, Encoding.ASCII));
+                            case 0xa000:
+                                return new ExifVersion(ExifTag.FlashpixVersion, ExifBitConverter.ToAscii(value, Encoding.ASCII));
+                            case 0xa001:
+                                return new ExifEnumProperty<ColorSpace>(ExifTag.ColorSpace, (ColorSpace)conv.ToUInt16(value, 0));
+                            case 0x9286:
+                                {
+                                    // Default to ASCII
+                                    Encoding enc = Encoding.ASCII;
+                                    bool hasenc;
+
+                                    switch (value.Length)
+                                    {
+                                        case < 8:
+                                            hasenc = false;
+                                            break;
+                                        default:
+                                            {
+                                                hasenc = true;
+
+                                                string encstr = enc.GetString(value, 0, 8);
+
+                                                switch (string.Compare(encstr, "ASCII\0\0\0", StringComparison.OrdinalIgnoreCase))
+                                                {
+                                                    case 0:
+                                                        enc = Encoding.ASCII;
+                                                        break;
+                                                    default:
+                                                        if (string.Compare(encstr, "JIS\0\0\0\0\0", StringComparison.OrdinalIgnoreCase) == 0)
+                                                        {
+                                                            enc = Encoding.GetEncoding("Japanese (JIS 0208-1990 and 0212-1990)");
+                                                        }
+                                                        else if (string.Compare(encstr, "Unicode\0", StringComparison.OrdinalIgnoreCase) == 0)
+                                                        {
+                                                            enc = Encoding.Unicode;
+                                                        }
+                                                        else
+                                                        {
+                                                            hasenc = false;
+                                                        }
+
+                                                        break;
+                                                }
+
+                                                break;
+                                            }
+                                    }
+
+                                    string val = (hasenc ? enc.GetString(value, 8, value.Length - 8) : enc.GetString(value)).Trim('\0');
+
+                                    return new ExifEncodedString(ExifTag.UserComment, val, enc);
+                                }
+                            case 0x9003:
+                                return new ExifDateTime(ExifTag.DateTimeOriginal, ExifBitConverter.ToDateTime(value));
+                            case 0x9004:
+                                return new ExifDateTime(ExifTag.DateTimeDigitized, ExifBitConverter.ToDateTime(value));
+                            case 0x8822:
+                                return new ExifEnumProperty<ExposureProgram>(ExifTag.ExposureProgram, (ExposureProgram)conv.ToUInt16(value, 0));
+                            case 0x9207:
+                                return new ExifEnumProperty<MeteringMode>(ExifTag.MeteringMode, (MeteringMode)conv.ToUInt16(value, 0));
+                            case 0x9208:
+                                return new ExifEnumProperty<LightSource>(ExifTag.LightSource, (LightSource)conv.ToUInt16(value, 0));
+                            case 0x9209:
+                                return new ExifEnumProperty<Flash>(ExifTag.Flash, (Flash)conv.ToUInt16(value, 0), true);
+                            case 0x9214:
+                                if (count == 3)
+                                {
+                                    return new ExifCircularSubjectArea(ExifTag.SubjectArea, ExifBitConverter.ToUShortArray(value, (int)count, byteOrder));
+                                }
+                                else if (count == 4)
+                                {
+                                    return new ExifRectangularSubjectArea(ExifTag.SubjectArea, ExifBitConverter.ToUShortArray(value, (int)count, byteOrder));
+                                }
+                                else // count == 2
+                                {
+                                    return new ExifPointSubjectArea(ExifTag.SubjectArea, ExifBitConverter.ToUShortArray(value, (int)count, byteOrder));
+                                }
+                            case 0xa210:
+                                return new ExifEnumProperty<ResolutionUnit>(ExifTag.FocalPlaneResolutionUnit, (ResolutionUnit)conv.ToUInt16(value, 0), true);
+                            case 0xa214:
+                                return new ExifPointSubjectArea(ExifTag.SubjectLocation, ExifBitConverter.ToUShortArray(value, (int)count, byteOrder));
+                            case 0xa217:
+                                return new ExifEnumProperty<SensingMethod>(ExifTag.SensingMethod, (SensingMethod)conv.ToUInt16(value, 0), true);
+                            case 0xa300:
+                                return new ExifEnumProperty<FileSource>(ExifTag.FileSource, (FileSource)conv.ToUInt16(value, 0), true);
+                            case 0xa301:
+                                return new ExifEnumProperty<SceneType>(ExifTag.SceneType, (SceneType)conv.ToUInt16(value, 0), true);
+                            case 0xa401:
+                                return new ExifEnumProperty<CustomRendered>(ExifTag.CustomRendered, (CustomRendered)conv.ToUInt16(value, 0), true);
+                            case 0xa402:
+                                return new ExifEnumProperty<ExposureMode>(ExifTag.ExposureMode, (ExposureMode)conv.ToUInt16(value, 0), true);
+                            case 0xa403:
+                                return new ExifEnumProperty<WhiteBalance>(ExifTag.WhiteBalance, (WhiteBalance)conv.ToUInt16(value, 0), true);
+                            case 0xa406:
+                                return new ExifEnumProperty<SceneCaptureType>(ExifTag.SceneCaptureType, (SceneCaptureType)conv.ToUInt16(value, 0), true);
+                            case 0xa407:
+                                return new ExifEnumProperty<GainControl>(ExifTag.GainControl, (GainControl)conv.ToUInt16(value, 0), true);
+                            case 0xa408:
+                                return new ExifEnumProperty<Contrast>(ExifTag.Contrast, (Contrast)conv.ToUInt16(value, 0), true);
+                            case 0xa409:
+                                return new ExifEnumProperty<Saturation>(ExifTag.Saturation, (Saturation)conv.ToUInt16(value, 0), true);
+                            case 0xa40a:
+                                return new ExifEnumProperty<Sharpness>(ExifTag.Sharpness, (Sharpness)conv.ToUInt16(value, 0), true);
+                            case 0xa40c:
+                                return new ExifEnumProperty<SubjectDistanceRange>(ExifTag.SubjectDistanceRange, (SubjectDistanceRange)conv.ToUInt16(value, 0), true);
+                            case 0xa432:
+                                return new LensSpecification(ExifTag.LensSpecification, ExifBitConverter.ToURationalArray(value, (int)count, byteOrder));
+                        }
+
+                        break;
                     }
 
-                    string val = (hasenc ? enc.GetString(value, 8, value.Length - 8) : enc.GetString(value)).Trim('\0');
-
-                    return new ExifEncodedString(ExifTag.UserComment, val, enc);
-                }
-                else if (tag == 0x9003) // DateTimeOriginal
-                    return new ExifDateTime(ExifTag.DateTimeOriginal, ExifBitConverter.ToDateTime(value));
-                else if (tag == 0x9004) // DateTimeDigitized
-                    return new ExifDateTime(ExifTag.DateTimeDigitized, ExifBitConverter.ToDateTime(value));
-                else if (tag == 0x8822) // ExposureProgram
-                    return new ExifEnumProperty<ExposureProgram>(ExifTag.ExposureProgram, (ExposureProgram)conv.ToUInt16(value, 0));
-                else if (tag == 0x9207) // MeteringMode
-                    return new ExifEnumProperty<MeteringMode>(ExifTag.MeteringMode, (MeteringMode)conv.ToUInt16(value, 0));
-                else if (tag == 0x9208) // LightSource
-                    return new ExifEnumProperty<LightSource>(ExifTag.LightSource, (LightSource)conv.ToUInt16(value, 0));
-                else if (tag == 0x9209) // Flash
-                    return new ExifEnumProperty<Flash>(ExifTag.Flash, (Flash)conv.ToUInt16(value, 0), true);
-                else if (tag == 0x9214) // SubjectArea
-                {
-                    if (count == 3)
-                        return new ExifCircularSubjectArea(ExifTag.SubjectArea, ExifBitConverter.ToUShortArray(value, (int)count, byteOrder));
-                    else if (count == 4)
-                        return new ExifRectangularSubjectArea(ExifTag.SubjectArea, ExifBitConverter.ToUShortArray(value, (int)count, byteOrder));
-                    else // count == 2
-                        return new ExifPointSubjectArea(ExifTag.SubjectArea, ExifBitConverter.ToUShortArray(value, (int)count, byteOrder));
-                }
-                else if (tag == 0xa210) // FocalPlaneResolutionUnit
-                    return new ExifEnumProperty<ResolutionUnit>(ExifTag.FocalPlaneResolutionUnit, (ResolutionUnit)conv.ToUInt16(value, 0), true);
-                else if (tag == 0xa214) // SubjectLocation
-                    return new ExifPointSubjectArea(ExifTag.SubjectLocation, ExifBitConverter.ToUShortArray(value, (int)count, byteOrder));
-                else if (tag == 0xa217) // SensingMethod
-                    return new ExifEnumProperty<SensingMethod>(ExifTag.SensingMethod, (SensingMethod)conv.ToUInt16(value, 0), true);
-                else if (tag == 0xa300) // FileSource
-                    return new ExifEnumProperty<FileSource>(ExifTag.FileSource, (FileSource)conv.ToUInt16(value, 0), true);
-                else if (tag == 0xa301) // SceneType
-                    return new ExifEnumProperty<SceneType>(ExifTag.SceneType, (SceneType)conv.ToUInt16(value, 0), true);
-                else if (tag == 0xa401) // CustomRendered
-                    return new ExifEnumProperty<CustomRendered>(ExifTag.CustomRendered, (CustomRendered)conv.ToUInt16(value, 0), true);
-                else if (tag == 0xa402) // ExposureMode
-                    return new ExifEnumProperty<ExposureMode>(ExifTag.ExposureMode, (ExposureMode)conv.ToUInt16(value, 0), true);
-                else if (tag == 0xa403) // WhiteBalance
-                    return new ExifEnumProperty<WhiteBalance>(ExifTag.WhiteBalance, (WhiteBalance)conv.ToUInt16(value, 0), true);
-                else if (tag == 0xa406) // SceneCaptureType
-                    return new ExifEnumProperty<SceneCaptureType>(ExifTag.SceneCaptureType, (SceneCaptureType)conv.ToUInt16(value, 0), true);
-                else if (tag == 0xa407) // GainControl
-                    return new ExifEnumProperty<GainControl>(ExifTag.GainControl, (GainControl)conv.ToUInt16(value, 0), true);
-                else if (tag == 0xa408) // Contrast
-                    return new ExifEnumProperty<Contrast>(ExifTag.Contrast, (Contrast)conv.ToUInt16(value, 0), true);
-                else if (tag == 0xa409) // Saturation
-                    return new ExifEnumProperty<Saturation>(ExifTag.Saturation, (Saturation)conv.ToUInt16(value, 0), true);
-                else if (tag == 0xa40a) // Sharpness
-                    return new ExifEnumProperty<Sharpness>(ExifTag.Sharpness, (Sharpness)conv.ToUInt16(value, 0), true);
-                else if (tag == 0xa40c) // SubjectDistanceRange
-                    return new ExifEnumProperty<SubjectDistanceRange>(ExifTag.SubjectDistanceRange, (SubjectDistanceRange)conv.ToUInt16(value, 0), true);
-                else if (tag == 0xa432) // LensSpecification
-                    return new LensSpecification(ExifTag.LensSpecification, ExifBitConverter.ToURationalArray(value, (int)count, byteOrder));
-            }
-            else if (ifd == IFD.GPS)
-            {
-                if (tag == 0) // GPSVersionID
-                    return new ExifVersion(ExifTag.GPSVersionID, ExifBitConverter.ToString(value));
-                else if (tag == 1) // GPSLatitudeRef
-                    return new ExifEnumProperty<GPSLatitudeRef>(ExifTag.GPSLatitudeRef, (GPSLatitudeRef)value[0]);
-                else if (tag == 2) // GPSLatitude
-                    return new GPSLatitudeLongitude(ExifTag.GPSLatitude, ExifBitConverter.ToURationalArray(value, (int)count, byteOrder));
-                else if (tag == 3) // GPSLongitudeRef
-                    return new ExifEnumProperty<GPSLongitudeRef>(ExifTag.GPSLongitudeRef, (GPSLongitudeRef)value[0]);
-                else if (tag == 4) // GPSLongitude
-                    return new GPSLatitudeLongitude(ExifTag.GPSLongitude, ExifBitConverter.ToURationalArray(value, (int)count, byteOrder));
-                else if (tag == 5) // GPSAltitudeRef
-                    return new ExifEnumProperty<GPSAltitudeRef>(ExifTag.GPSAltitudeRef, (GPSAltitudeRef)value[0]);
-                else if (tag == 7) // GPSTimeStamp
-                    return new GPSTimeStamp(ExifTag.GPSTimeStamp, ExifBitConverter.ToURationalArray(value, (int)count, byteOrder));
-                else if (tag == 9) // GPSStatus
-                    return new ExifEnumProperty<GPSStatus>(ExifTag.GPSStatus, (GPSStatus)value[0]);
-                else if (tag == 10) // GPSMeasureMode
-                    return new ExifEnumProperty<GPSMeasureMode>(ExifTag.GPSMeasureMode, (GPSMeasureMode)value[0]);
-                else if (tag == 12) // GPSSpeedRef
-                    return new ExifEnumProperty<GPSSpeedRef>(ExifTag.GPSSpeedRef, (GPSSpeedRef)value[0]);
-                else if (tag == 14) // GPSTrackRef
-                    return new ExifEnumProperty<GPSDirectionRef>(ExifTag.GPSTrackRef, (GPSDirectionRef)value[0]);
-                else if (tag == 16) // GPSImgDirectionRef
-                    return new ExifEnumProperty<GPSDirectionRef>(ExifTag.GPSImgDirectionRef, (GPSDirectionRef)value[0]);
-                else if (tag == 19) // GPSDestLatitudeRef
-                    return new ExifEnumProperty<GPSLatitudeRef>(ExifTag.GPSDestLatitudeRef, (GPSLatitudeRef)value[0]);
-                else if (tag == 20) // GPSDestLatitude
-                    return new GPSLatitudeLongitude(ExifTag.GPSDestLatitude, ExifBitConverter.ToURationalArray(value, (int)count, byteOrder));
-                else if (tag == 21) // GPSDestLongitudeRef
-                    return new ExifEnumProperty<GPSLongitudeRef>(ExifTag.GPSDestLongitudeRef, (GPSLongitudeRef)value[0]);
-                else if (tag == 22) // GPSDestLongitude
-                    return new GPSLatitudeLongitude(ExifTag.GPSDestLongitude, ExifBitConverter.ToURationalArray(value, (int)count, byteOrder));
-                else if (tag == 23) // GPSDestBearingRef
-                    return new ExifEnumProperty<GPSDirectionRef>(ExifTag.GPSDestBearingRef, (GPSDirectionRef)value[0]);
-                else if (tag == 25) // GPSDestDistanceRef
-                    return new ExifEnumProperty<GPSDistanceRef>(ExifTag.GPSDestDistanceRef, (GPSDistanceRef)value[0]);
-                else if (tag == 29) // GPSDateStamp
-                    return new ExifDate(ExifTag.GPSDateStamp, ExifBitConverter.ToDateTime(value, false));
-                else if (tag == 30) // GPSDifferential
-                    return new ExifEnumProperty<GPSDifferential>(ExifTag.GPSDifferential, (GPSDifferential)conv.ToUInt16(value, 0));
-            }
-            else if (ifd == IFD.Interop)
-            {
-                if (tag == 1) // InteroperabilityIndex
-                    return new ExifAscii(ExifTag.InteroperabilityIndex, ExifBitConverter.ToAscii(value, Encoding.ASCII), Encoding.ASCII);
-                else if (tag == 2) // InteroperabilityVersion
-                    return new ExifVersion(ExifTag.InteroperabilityVersion, ExifBitConverter.ToAscii(value, Encoding.ASCII));
-            }
-            else if (ifd == IFD.First)
-            {
-                if (tag == 0x103) // Compression
-                    return new ExifEnumProperty<Compression>(ExifTag.ThumbnailCompression, (Compression)conv.ToUInt16(value, 0));
-                else if (tag == 0x106) // PhotometricInterpretation
-                    return new ExifEnumProperty<PhotometricInterpretation>(ExifTag.ThumbnailPhotometricInterpretation, (PhotometricInterpretation)conv.ToUInt16(value, 0));
-                else if (tag == 0x112) // Orientation
-                    return new ExifEnumProperty<Orientation>(ExifTag.ThumbnailOrientation, (Orientation)conv.ToUInt16(value, 0));
-                else if (tag == 0x11c) // PlanarConfiguration
-                    return new ExifEnumProperty<PlanarConfiguration>(ExifTag.ThumbnailPlanarConfiguration, (PlanarConfiguration)conv.ToUInt16(value, 0));
-                else if (tag == 0x213) // YCbCrPositioning
-                    return new ExifEnumProperty<YCbCrPositioning>(ExifTag.ThumbnailYCbCrPositioning, (YCbCrPositioning)conv.ToUInt16(value, 0));
-                else if (tag == 0x128) // ResolutionUnit
-                    return new ExifEnumProperty<ResolutionUnit>(ExifTag.ThumbnailResolutionUnit, (ResolutionUnit)conv.ToUInt16(value, 0));
-                else if (tag == 0x132) // DateTime
-                    return new ExifDateTime(ExifTag.ThumbnailDateTime, ExifBitConverter.ToDateTime(value));
+                case IFD.GPS:
+                    switch (tag) // GPSVersionID
+                    {
+                        case 0:
+                            return new ExifVersion(ExifTag.GPSVersionID, ExifBitConverter.ToString(value));
+                        case 1:
+                            return new ExifEnumProperty<GPSLatitudeRef>(ExifTag.GPSLatitudeRef, (GPSLatitudeRef)value[0]);
+                        case 2:
+                            return new GPSLatitudeLongitude(ExifTag.GPSLatitude, ExifBitConverter.ToURationalArray(value, (int)count, byteOrder));
+                        case 3:
+                            return new ExifEnumProperty<GPSLongitudeRef>(ExifTag.GPSLongitudeRef, (GPSLongitudeRef)value[0]);
+                        case 4:
+                            return new GPSLatitudeLongitude(ExifTag.GPSLongitude, ExifBitConverter.ToURationalArray(value, (int)count, byteOrder));
+                        case 5:
+                            return new ExifEnumProperty<GPSAltitudeRef>(ExifTag.GPSAltitudeRef, (GPSAltitudeRef)value[0]);
+                        case 7:
+                            return new GPSTimeStamp(ExifTag.GPSTimeStamp, ExifBitConverter.ToURationalArray(value, (int)count, byteOrder));
+                        case 9:
+                            return new ExifEnumProperty<GPSStatus>(ExifTag.GPSStatus, (GPSStatus)value[0]);
+                        case 10:
+                            return new ExifEnumProperty<GPSMeasureMode>(ExifTag.GPSMeasureMode, (GPSMeasureMode)value[0]);
+                        case 12:
+                            return new ExifEnumProperty<GPSSpeedRef>(ExifTag.GPSSpeedRef, (GPSSpeedRef)value[0]);
+                        case 14:
+                            return new ExifEnumProperty<GPSDirectionRef>(ExifTag.GPSTrackRef, (GPSDirectionRef)value[0]);
+                        case 16:
+                            return new ExifEnumProperty<GPSDirectionRef>(ExifTag.GPSImgDirectionRef, (GPSDirectionRef)value[0]);
+                        case 19:
+                            return new ExifEnumProperty<GPSLatitudeRef>(ExifTag.GPSDestLatitudeRef, (GPSLatitudeRef)value[0]);
+                        case 20:
+                            return new GPSLatitudeLongitude(ExifTag.GPSDestLatitude, ExifBitConverter.ToURationalArray(value, (int)count, byteOrder));
+                        case 21:
+                            return new ExifEnumProperty<GPSLongitudeRef>(ExifTag.GPSDestLongitudeRef, (GPSLongitudeRef)value[0]);
+                        case 22:
+                            return new GPSLatitudeLongitude(ExifTag.GPSDestLongitude, ExifBitConverter.ToURationalArray(value, (int)count, byteOrder));
+                        case 23:
+                            return new ExifEnumProperty<GPSDirectionRef>(ExifTag.GPSDestBearingRef, (GPSDirectionRef)value[0]);
+                        case 25:
+                            return new ExifEnumProperty<GPSDistanceRef>(ExifTag.GPSDestDistanceRef, (GPSDistanceRef)value[0]);
+                        case 29:
+                            return new ExifDate(ExifTag.GPSDateStamp, ExifBitConverter.ToDateTime(value, false));
+                        case 30:
+                            return new ExifEnumProperty<GPSDifferential>(ExifTag.GPSDifferential, (GPSDifferential)conv.ToUInt16(value, 0));
+                    }
+                    break;
+                case IFD.Interop:
+                    switch (tag) // InteroperabilityIndex
+                    {
+                        case 1:
+                            return new ExifAscii(ExifTag.InteroperabilityIndex, ExifBitConverter.ToAscii(value, Encoding.ASCII), Encoding.ASCII);
+                        case 2:
+                            return new ExifVersion(ExifTag.InteroperabilityVersion, ExifBitConverter.ToAscii(value, Encoding.ASCII));
+                    }
+                    break;
+                case IFD.First:
+                    switch (tag) // Compression
+                    {
+                        case 0x103:
+                            return new ExifEnumProperty<Compression>(ExifTag.ThumbnailCompression, (Compression)conv.ToUInt16(value, 0));
+                        case 0x106:
+                            return new ExifEnumProperty<PhotometricInterpretation>(ExifTag.ThumbnailPhotometricInterpretation, (PhotometricInterpretation)conv.ToUInt16(value, 0));
+                        case 0x112:
+                            return new ExifEnumProperty<Orientation>(ExifTag.ThumbnailOrientation, (Orientation)conv.ToUInt16(value, 0));
+                        case 0x11c:
+                            return new ExifEnumProperty<PlanarConfiguration>(ExifTag.ThumbnailPlanarConfiguration, (PlanarConfiguration)conv.ToUInt16(value, 0));
+                        case 0x213:
+                            return new ExifEnumProperty<YCbCrPositioning>(ExifTag.ThumbnailYCbCrPositioning, (YCbCrPositioning)conv.ToUInt16(value, 0));
+                        case 0x128:
+                            return new ExifEnumProperty<ResolutionUnit>(ExifTag.ThumbnailResolutionUnit, (ResolutionUnit)conv.ToUInt16(value, 0));
+                        case 0x132:
+                            return new ExifDateTime(ExifTag.ThumbnailDateTime, ExifBitConverter.ToDateTime(value));
+                    }
+                    break;
             }
 
-            if (type == 1) // 1 = BYTE An 8-bit unsigned integer.
+            switch (type) // 1 = BYTE An 8-bit unsigned integer.
             {
-                if (count == 1)
-                    return new ExifByte(etag, value[0]);
-                else
-                    return new ExifByteArray(etag, value);
+                case 1:
+                    return count switch
+                    {
+                        1 => new ExifByte(etag, value[0]),
+                        _ => new ExifByteArray(etag, value)
+                    };
+                case 2:
+                    return new ExifAscii(etag, ExifBitConverter.ToAscii(value, encoding), encoding);
+                case 3:
+                    return count switch
+                    {
+                        1 => new ExifUShort(etag, conv.ToUInt16(value, 0)),
+                        _ => new ExifUShortArray(etag, ExifBitConverter.ToUShortArray(value, (int)count, byteOrder))
+                    };
+                case 4:
+                    return count switch
+                    {
+                        1 => new ExifUInt(etag, conv.ToUInt32(value, 0)),
+                        _ => new ExifUIntArray(etag, ExifBitConverter.ToUIntArray(value, (int)count, byteOrder))
+                    };
+                case 5:
+                    return count switch
+                    {
+                        1 => new ExifURational(etag, ExifBitConverter.ToURational(value, byteOrder)),
+                        _ => new ExifURationalArray(etag, ExifBitConverter.ToURationalArray(value, (int)count, byteOrder))
+                    };
+                case 6:
+                    {
+                        switch (count)
+                        {
+                            case 1:
+                                return new ExifSByte(etag, (sbyte)value[0]);
+                            default:
+                                {
+                                    sbyte[] data = new sbyte[count];
+                                    Buffer.BlockCopy(value, 0, data, 0, (int)count);
+                                    return new ExifSByteArray(etag, data);
+                                }
+                        }
+                    }
+                case 7:
+                    return new ExifUndefined(etag, value);
+                case 8:
+                    return count switch
+                    {
+                        1 => new ExifSShort(etag, conv.ToInt16(value, 0)),
+                        _ => new ExifSShortArray(etag, ExifBitConverter.ToSShortArray(value, (int)count, byteOrder))
+                    };
+                case 9:
+                    return count switch
+                    {
+                        1 => new ExifSInt(etag, conv.ToInt32(value, 0)),
+                        _ => new ExifSIntArray(etag, ExifBitConverter.ToSIntArray(value, (int)count, byteOrder))
+                    };
+                case 10:
+                    return count switch
+                    {
+                        1 => new ExifSRational(etag, ExifBitConverter.ToSRational(value, byteOrder)),
+                        _ => new ExifSRationalArray(etag, ExifBitConverter.ToSRationalArray(value, (int)count, byteOrder))
+                    };
+                case 11:
+                    return count switch
+                    {
+                        1 => new ExifFloat(etag, conv.ToSingle(value, 0)),
+                        _ => new ExifFloatArray(etag, ExifBitConverter.ToSingleArray(value, (int)count, byteOrder))
+                    };
+                case 12:
+                    return count switch
+                    {
+                        1 => new ExifDouble(etag, conv.ToDouble(value, 0)),
+                        _ => new ExifDoubleArray(etag, ExifBitConverter.ToDoubleArray(value, (int)count, byteOrder))
+                    };
+                default:
+                    throw new ArgumentException("Unknown property type.");
             }
-            else if (type == 2) // 2 = ASCII An 8-bit byte containing one 7-bit ASCII code.
-            {
-                return new ExifAscii(etag, ExifBitConverter.ToAscii(value, encoding), encoding);
-            }
-            else if (type == 3) // 3 = SHORT A 16-bit (2-byte) unsigned integer.
-            {
-                if (count == 1)
-                    return new ExifUShort(etag, conv.ToUInt16(value, 0));
-                else
-                    return new ExifUShortArray(etag, ExifBitConverter.ToUShortArray(value, (int)count, byteOrder));
-            }
-            else if (type == 4) // 4 = LONG A 32-bit (4-byte) unsigned integer.
-            {
-                if (count == 1)
-                    return new ExifUInt(etag, conv.ToUInt32(value, 0));
-                else
-                    return new ExifUIntArray(etag, ExifBitConverter.ToUIntArray(value, (int)count, byteOrder));
-            }
-            else if (type == 5) // 5 = RATIONAL Two LONGs. The first LONG is the numerator and the second LONG expresses the denominator.
-            {
-                if (count == 1)
-                    return new ExifURational(etag, ExifBitConverter.ToURational(value, byteOrder));
-                else
-                    return new ExifURationalArray(etag, ExifBitConverter.ToURationalArray(value, (int)count, byteOrder));
-            }
-            else if (type == 6) // 1 = SBYTE An 8-bit signed integer.
-            {
-                if (count == 1)
-                {
-                    return new ExifSByte(etag, (sbyte)value[0]);
-                }
-                else
-                {
-                    sbyte[] data = new sbyte[count];
-                    Buffer.BlockCopy(value, 0, data, 0, (int)count);
-                    return new ExifSByteArray(etag, data);
-                }
-            }
-            else if (type == 7) // 7 = UNDEFINED An 8-bit byte that can take any value depending on the field definition.
-                return new ExifUndefined(etag, value);
-            else if (type == 8) // 8 = SSHORT A 16-bit (2-byte) signed integer.
-            {
-                if (count == 1)
-                    return new ExifSShort(etag, conv.ToInt16(value, 0));
-                else
-                    return new ExifSShortArray(etag, ExifBitConverter.ToSShortArray(value, (int)count, byteOrder));
-            }
-            else if (type == 9) // 9 = SLONG A 32-bit (4-byte) signed integer (2's complement notation).
-            {
-                if (count == 1)
-                    return new ExifSInt(etag, conv.ToInt32(value, 0));
-                else
-                    return new ExifSIntArray(etag, ExifBitConverter.ToSIntArray(value, (int)count, byteOrder));
-            }
-            else if (type == 10) // 10 = SRATIONAL Two SLONGs. The first SLONG is the numerator and the second SLONG is the denominator.
-            {
-                if (count == 1)
-                    return new ExifSRational(etag, ExifBitConverter.ToSRational(value, byteOrder));
-                else
-                    return new ExifSRationalArray(etag, ExifBitConverter.ToSRationalArray(value, (int)count, byteOrder));
-            }
-            else if (type == 11) // 11 = FLOAT Single precision (4-byte) IEEE format.
-            {
-                if (count == 1)
-                    return new ExifFloat(etag, conv.ToSingle(value, 0));
-                else
-                    return new ExifFloatArray(etag, ExifBitConverter.ToSingleArray(value, (int)count, byteOrder));
-            }
-            else if (type == 12) // 12 = DOUBLE Double precision (8-byte) IEEE format.
-            {
-                if (count == 1)
-                    return new ExifDouble(etag, conv.ToDouble(value, 0));
-                else
-                    return new ExifDoubleArray(etag, ExifBitConverter.ToDoubleArray(value, (int)count, byteOrder));
-            }
-            else
-                throw new ArgumentException("Unknown property type.");
         }
     }
 }
