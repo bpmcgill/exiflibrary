@@ -15,15 +15,13 @@ namespace ExifLibrary
             PixelData = new byte[0];
         }
 
-        public JFIFThumbnail(ImageFormat format, byte[] data)
-                    : this()
+        public JFIFThumbnail(ImageFormat format, byte[] data) : this()
         {
             Format = format;
             PixelData = data;
         }
 
-        public JFIFThumbnail(byte[] palette, byte[] data)
-                    : this()
+        public JFIFThumbnail(byte[] palette, byte[] data) : this()
         {
             Format = ImageFormat.BMPPalette;
             Palette = palette;

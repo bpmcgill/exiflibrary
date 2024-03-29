@@ -31,14 +31,22 @@ namespace ExifLibrary
             {
                 // Length of chunk data
                 byte[] lengthBytes = new byte[4];
+
                 if (stream.Read(lengthBytes, 0, 4) != 4)
+                {
                     throw new NotValidPNGFileException();
+                }
+
                 uint length = conv.ToUInt32(lengthBytes, 0);
 
                 // Chunk type
                 byte[] typeBytes = new byte[4];
+
                 if (stream.Read(typeBytes, 0, 4) != 4)
+                {
                     throw new NotValidPNGFileException();
+                }
+
                 string type = Encoding.ASCII.GetString(typeBytes);
 
                 // Chunk data
@@ -46,14 +54,21 @@ namespace ExifLibrary
 
                 // CRC of type name and data
                 byte[] crcBytes = new byte[4];
+
                 if (stream.Read(crcBytes, 0, 4) != 4)
+                {
                     throw new NotValidPNGFileException();
+                }
+
                 uint crc = conv.ToUInt32(crcBytes, 0);
 
                 // Add to chunks list
                 PNGChunk chunk = new PNGChunk(type, data);
+
                 if (chunk.CRC != crc)
+                {
                     throw new NotValidPNGFileException();
+                }
                 Chunks.Add(chunk);
             }
 
@@ -83,21 +98,29 @@ namespace ExifLibrary
                         int sepIndex = i;
 
                         byte[] keywordBytes = new byte[sepIndex];
+
                         Array.Copy(textChunk.Data, 0, keywordBytes, 0, keywordBytes.Length);
+
                         string keyword = latin1.GetString(keywordBytes);
 
                         if (textChunk.Type == "tEXt")
                         {
                             byte[] valueBytes = new byte[textChunk.Data.Length - (sepIndex + 1)];
+
                             Array.Copy(textChunk.Data, sepIndex + 1, valueBytes, 0, valueBytes.Length);
+
                             string value = latin1.GetString(valueBytes);
+
                             Properties.Add(new PNGText(TagFromKeyword(keyword), keyword, value, false));
                         }
                         else
                         {
                             byte[] valueBytes = new byte[textChunk.Data.Length - (sepIndex + 2)];
+
                             Array.Copy(textChunk.Data, sepIndex + 2, valueBytes, 0, valueBytes.Length);
+
                             string value = Utility.DecompressString(valueBytes, latin1);
+
                             Properties.Add(new PNGText(TagFromKeyword(keyword), keyword, value, true));
                         }
 
@@ -116,7 +139,9 @@ namespace ExifLibrary
                         int sepIndex = i;
 
                         byte[] keywordBytes = new byte[sepIndex];
+
                         Array.Copy(textChunk.Data, 0, keywordBytes, 0, keywordBytes.Length);
+
                         string keyword = latin1.GetString(keywordBytes);
 
                         bool compressed = (textChunk.Data[sepIndex + 1] == 1);
@@ -126,8 +151,11 @@ namespace ExifLibrary
                             if (textChunk.Data[j] == 0)
                             {
                                 int sepLangIndex = j;
+
                                 byte[] langBytes = new byte[sepLangIndex - (sepIndex + 3)];
+
                                 Array.Copy(textChunk.Data, sepIndex + 3, langBytes, 0, langBytes.Length);
+
                                 string lang = latin1.GetString(langBytes);
 
                                 for (int k = sepLangIndex + 1; k < textChunk.Data.Length; k++)
@@ -135,17 +163,27 @@ namespace ExifLibrary
                                     if (textChunk.Data[k] == 0)
                                     {
                                         int sepTransIndex = k;
+
                                         byte[] transBytes = new byte[sepTransIndex - (sepLangIndex + 1)];
+
                                         Array.Copy(textChunk.Data, sepLangIndex + 1, transBytes, 0, transBytes.Length);
+
                                         string trans = Encoding.UTF8.GetString(transBytes);
 
                                         byte[] valueBytes = new byte[textChunk.Data.Length - (sepTransIndex + 1)];
+
                                         Array.Copy(textChunk.Data, sepTransIndex + 1, valueBytes, 0, valueBytes.Length);
+
                                         string value = string.Empty;
+
                                         if (compressed)
+                                        {
                                             value = Utility.DecompressString(valueBytes, Encoding.UTF8);
+                                        }
                                         else
+                                        {
                                             value = Encoding.UTF8.GetString(valueBytes);
+                                        }
 
                                         Properties.Add(new PNGInternationalText(TagFromKeyword(keyword), keyword, value, compressed, lang, trans));
 
@@ -166,7 +204,9 @@ namespace ExifLibrary
             foreach (PNGChunk timeChunk in Chunks.FindAll(c => c.Type == "tIME"))
             {
                 ushort year = ExifBitConverter.BigEndian.ToUInt16(timeChunk.Data, 0);
+
                 DateTime mtime = new DateTime(year, timeChunk.Data[2], timeChunk.Data[3], timeChunk.Data[4], timeChunk.Data[5], timeChunk.Data[6]);
+
                 Properties.Add(new PNGTimeStamp(ExifTag.PNGTimeStamp, mtime));
             }
         }
@@ -178,27 +218,49 @@ namespace ExifLibrary
         private ExifTag TagFromKeyword(string keyword)
         {
             if (string.Compare(keyword, "Title", StringComparison.OrdinalIgnoreCase) == 0)
+            {
                 return ExifTag.PNGTitle;
+            }
             else if (string.Compare(keyword, "Author", StringComparison.OrdinalIgnoreCase) == 0)
+            {
                 return ExifTag.PNGAuthor;
+            }
             else if (string.Compare(keyword, "Description", StringComparison.OrdinalIgnoreCase) == 0)
+            {
                 return ExifTag.PNGDescription;
+            }
             else if (string.Compare(keyword, "Copyright", StringComparison.OrdinalIgnoreCase) == 0)
+            {
                 return ExifTag.PNGCopyright;
+            }
             else if (string.Compare(keyword, "Creation Time", StringComparison.OrdinalIgnoreCase) == 0)
+            {
                 return ExifTag.PNGCreationTime;
+            }
             else if (string.Compare(keyword, "Software", StringComparison.OrdinalIgnoreCase) == 0)
+            {
                 return ExifTag.PNGSoftware;
+            }
             else if (string.Compare(keyword, "Disclaimer", StringComparison.OrdinalIgnoreCase) == 0)
+            {
                 return ExifTag.PNGDisclaimer;
+            }
             else if (string.Compare(keyword, "Warning", StringComparison.OrdinalIgnoreCase) == 0)
+            {
                 return ExifTag.PNGWarning;
+            }
             else if (string.Compare(keyword, "Source", StringComparison.OrdinalIgnoreCase) == 0)
+            {
                 return ExifTag.PNGSource;
+            }
             else if (string.Compare(keyword, "Comment", StringComparison.OrdinalIgnoreCase) == 0)
+            {
                 return ExifTag.PNGComment;
+            }
             else
+            {
                 return ExifTag.PNGText;
+            }
         }
 
         /// <summary>
@@ -215,10 +277,15 @@ namespace ExifLibrary
                 if (prop is PNGText)
                 {
                     PNGText exprop = prop as PNGText;
+
                     if (!exprop.Compressed)
+                    {
                         Chunks.Insert(Chunks.Count - 1, new PNGChunk("tEXt", prop.Interoperability.Data));
+                    }
                     else
+                    {
                         Chunks.Insert(Chunks.Count - 1, new PNGChunk("zTXt", prop.Interoperability.Data));
+                    }
                 }
                 else if (prop is PNGInternationalText)
                 {
@@ -273,6 +340,7 @@ namespace ExifLibrary
                 int rem = chunk.Data.Length;
                 int offset = 0;
                 byte[] b = new byte[32768];
+
                 while (rem > 0)
                 {
                     int len = (int)Math.Min(rem, b.Length);

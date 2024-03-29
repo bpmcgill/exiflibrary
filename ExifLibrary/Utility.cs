@@ -42,6 +42,7 @@ namespace ExifLibrary
                 //stream.Seek(2, SeekOrigin.Begin); // Skip zlib flags
                 int b1 = stream.ReadByte();
                 int b2 = stream.ReadByte();
+
                 using (DeflateStream zip = new DeflateStream(stream, CompressionMode.Decompress))
                 using (StreamReader reader = new StreamReader(zip, encoding))
                 {
@@ -62,9 +63,13 @@ namespace ExifLibrary
                 stream.Seek(0, SeekOrigin.Begin);
 
                 byte[] b = new byte[32768];
+
                 int r;
+
                 while ((r = stream.Read(b, 0, b.Length)) > 0)
+                {
                     mem.Write(b, 0, r);
+                }
 
                 return mem.ToArray();
             }
@@ -81,7 +86,9 @@ namespace ExifLibrary
             if (length < 32768)
             {
                 byte[] b = new byte[length];
+
                 int r = stream.Read(b, 0, (int)length);
+
                 return b;
             }
             else
@@ -89,7 +96,9 @@ namespace ExifLibrary
                 using (MemoryStream mem = new MemoryStream())
                 {
                     byte[] b = new byte[32768];
+
                     int r;
+
                     while (length > 0 && (r = stream.Read(b, 0, (int)Math.Min(length, b.Length))) > 0)
                     {
                         mem.Write(b, 0, r);
@@ -112,25 +121,36 @@ namespace ExifLibrary
             List<byte[]> output = new List<byte[]>();
             int lastSepIndex = -1;
             int sepIndex = -1;
+
             for (int i = 0; i < data.Length; i++)
             {
                 if (data[i] == seperator)
                 {
                     sepIndex = i;
+
                     byte[] subArray = new byte[sepIndex - (lastSepIndex + 1)];
+
                     Array.Copy(data, lastSepIndex + 1, subArray, 0, subArray.Length);
+
                     lastSepIndex = sepIndex;
+
                     output.Add(subArray);
                 }
             }
+
             if (lastSepIndex < data.Length - 1)
             {
                 sepIndex = data.Length - 1;
+
                 byte[] subArray = new byte[sepIndex - (lastSepIndex + 1)];
+
                 Array.Copy(data, lastSepIndex + 1, subArray, 0, subArray.Length);
+
                 lastSepIndex = sepIndex;
+
                 output.Add(subArray);
             }
+
             return output;
         }
 
@@ -149,12 +169,17 @@ namespace ExifLibrary
                 for (int n = 0; n < 256; n++)
                 {
                     ulong c = (ulong)n;
+
                     for (int k = 0; k < 8; k++)
                     {
                         if ((c & 1) != 0)
+                        {
                             c = 0xedb88320L ^ (c >> 1);
+                        }
                         else
+                        {
                             c = c >> 1;
+                        }
                     }
                     table[n] = c;
                 }
@@ -174,7 +199,9 @@ namespace ExifLibrary
                 ulong c = crc;
 
                 if (table == null)
+                {
                     Initialize();
+                }
 
                 for (int n = 0; n < buffer.Length; n++)
                 {
@@ -188,10 +215,7 @@ namespace ExifLibrary
             /// </summary>
             /// <param name="buf">The bytes to calculate the CRC of.</param>
             /// <returns>CRC checksum.</returns>
-            public static ulong CRC(byte[] buffer)
-            {
-                return UpdateCRC(0xffffffffL, buffer) ^ 0xffffffffL;
-            }
+            public static ulong CRC(byte[] buffer) => UpdateCRC(0xffffffffL, buffer) ^ 0xffffffffL;
 
             /// <summary>
             /// Return the CRC of the given bytes.

@@ -7,10 +7,7 @@ namespace ExifLibrary
         /// <summary>
         /// Returns the ExifTag corresponding to the given tag id.
         /// </summary>
-        public static ExifTag GetExifTag(IFD ifd, ushort tagid)
-        {
-            return (ExifTag)(ifd + tagid);
-        }
+        public static ExifTag GetExifTag(IFD ifd, ushort tagid) => (ExifTag)(ifd + tagid);
 
         /// <summary>
         /// Returns the tag id corresponding to the given ExifTag.
@@ -24,10 +21,7 @@ namespace ExifLibrary
         /// <summary>
         /// Returns the IFD section containing the given tag.
         /// </summary>
-        public static IFD GetTagIFD(ExifTag tag)
-        {
-            return (IFD)(((int)tag / 100000) * 100000);
-        }
+        public static IFD GetTagIFD(ExifTag tag) => (IFD)(((int)tag / 100000) * 100000);
 
         /// <summary>
         /// Returns the string representation for the given exif tag including
@@ -36,10 +30,16 @@ namespace ExifLibrary
         public static string GetTagLongName(ExifTag tag)
         {
             string ifdname = Enum.GetName(typeof(IFD), GetTagIFD(tag));
+
             string name = Enum.GetName(typeof(ExifTag), tag);
+
             if (name == null)
+            {
                 name = "Unknown";
+            }
+
             string tagidname = GetTagID(tag).ToString();
+
             return ifdname + ": " + name + " (" + tagidname + ")";
         }
 
@@ -50,17 +50,18 @@ namespace ExifLibrary
         {
             string name = Enum.GetName(typeof(ExifTag), tag);
             if (name == null)
+            {
                 return "Unknown";
+            }
             else
+            {
                 return name;
+            }
         }
 
         /// <summary>
         /// Returns the string representation for the given tag id.
         /// </summary>
-        public static string GetTagName(IFD ifd, ushort tagid)
-        {
-            return GetTagName(GetExifTag(ifd, tagid));
-        }
+        public static string GetTagName(IFD ifd, ushort tagid) => GetTagName(GetExifTag(ifd, tagid));
     }
 }

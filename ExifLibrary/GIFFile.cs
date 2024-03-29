@@ -23,29 +23,38 @@ namespace ExifLibrary
             Blocks = new List<GIFBlock>();
 
             var conv = BitConverterEx.LittleEndian;
+
             stream.Seek(0, SeekOrigin.Begin);
 
             // version
             var versionBytes = Utility.GetStreamBytes(stream, 6);
+
             Version = Encoding.ASCII.GetString(versionBytes, 3, 3);
 
             // screen descriptor
             ScreenWidth = conv.ToUInt16(Utility.GetStreamBytes(stream, 2), 0);
             ScreenHeight = conv.ToUInt16(Utility.GetStreamBytes(stream, 2), 0);
+
             var sdByte = (byte)stream.ReadByte();
+
             // global color table flag in bit 7
             HasGCT = (sdByte & (1 << 7)) != 0;
+
             // color resolution in bits 6, 5, 4
             int b6 = (sdByte & (1 << 6));
             int b5 = (sdByte & (1 << 5));
             int b4 = (sdByte & (1 << 4));
+
             ColorResolution = (byte)(((b6 | b5 | b4) >> 4) + 1);
+
             // global color table sorted flag in bit 3
             IsGCTSorted = (sdByte & (1 << 3)) != 0;
+
             // global color table size bits 2, 1, 0
             int b2 = (sdByte & (1 << 2));
             int b1 = (sdByte & (1 << 1));
             int b0 = (sdByte & (1 << 0));
+
             SizeOfGCT = (byte)((b2 | b1 | b0) + 1);
 
             BackcolorIndex = (byte)stream.ReadByte();
@@ -58,10 +67,14 @@ namespace ExifLibrary
             while (stream.Position != stream.Length)
             {
                 int val = stream.ReadByte();
+
                 if (val == -1)
+                {
                     break;
+                }
 
                 byte separator = (byte)val;
+
                 if (separator == 0x3B)
                 {
                     // end of image
@@ -72,26 +85,34 @@ namespace ExifLibrary
                 {
                     // image descriptor block
                     var block = new GIFImageDescriptor();
+
                     block.Left = conv.ToUInt16(Utility.GetStreamBytes(stream, 2), 0);
                     block.Top = conv.ToUInt16(Utility.GetStreamBytes(stream, 2), 0);
                     block.Width = conv.ToUInt16(Utility.GetStreamBytes(stream, 2), 0);
                     block.Height = conv.ToUInt16(Utility.GetStreamBytes(stream, 2), 0);
 
                     var idByte = (byte)stream.ReadByte();
+
                     // local color table flag in bit 7
                     block.HasLCT = (idByte & (1 << 7)) != 0;
+
                     // interlaced flag in bit 6
                     block.IsInterlaced = (idByte & (1 << 6)) != 0;
+
                     // local color table sorted flag in bit 5
                     block.IsLCTSorted = (idByte & (1 << 5)) != 0;
+
                     // reserved value in bits 4, 3
                     int id4 = (idByte & (1 << 4));
                     int id3 = (idByte & (1 << 3));
+
                     block.Reserved = (byte)((id4 | id3) >> 3);
+
                     // local color table size bits 2, 1, 0
                     int id2 = (idByte & (1 << 2));
                     int id1 = (idByte & (1 << 1));
                     int id0 = (idByte & (1 << 0));
+
                     block.SizeOfLCT = (byte)((id2 | id1 | id0) + 1);
 
                     // local color table
@@ -107,30 +128,40 @@ namespace ExifLibrary
                 {
                     // extension block
                     val = stream.ReadByte();
+
                     if (val == -1)
+                    {
                         break;
+                    }
+
                     var label = (byte)val;
+
                     if (label == 0xF9)
                     {
                         // graphic control extension
                         var size = stream.ReadByte();
                         var block = new GIFGraphicControlExtension();
                         var geByte = (byte)stream.ReadByte();
+
                         // reserved value in bits 7, 6, 5
                         int ge7 = (geByte & (1 << 7));
                         int ge6 = (geByte & (1 << 6));
                         int ge5 = (geByte & (1 << 5));
+
                         block.Reserved = (byte)((ge7 | ge6 | ge5) >> 5);
+
                         // disposal method in bits 4, 3, 2
                         int ge4 = (geByte & (1 << 4));
                         int ge3 = (geByte & (1 << 3));
                         int ge2 = (geByte & (1 << 2));
+
                         block.DisposalMethod = (byte)((ge4 | ge3 | ge2) >> 2);
+
                         // user input flag in bit 1
                         block.UserInputFlag = (geByte & (1 << 1)) != 0;
+
                         // transparent color flag in bit 0
                         block.TransparentColorFlag = (geByte & (1 << 0)) != 0;
-
                         block.DelayTime = conv.ToUInt16(Utility.GetStreamBytes(stream, 2), 0);
                         block.TransparentColorIndex = (byte)stream.ReadByte();
 
@@ -153,6 +184,7 @@ namespace ExifLibrary
                         // plain text extension
                         var block = new GIFPlainTextExtension();
                         var size = stream.ReadByte();
+
                         block.Left = conv.ToUInt16(Utility.GetStreamBytes(stream, 2), 0);
                         block.Top = conv.ToUInt16(Utility.GetStreamBytes(stream, 2), 0);
                         block.Width = conv.ToUInt16(Utility.GetStreamBytes(stream, 2), 0);
@@ -172,6 +204,7 @@ namespace ExifLibrary
                         // application extension
                         var block = new GIFApplicationExtension();
                         var size = stream.ReadByte();
+
                         block.ApplicationIdentifier = Utility.GetStreamBytes(stream, 8);
                         block.AuthenticationCode = Utility.GetStreamBytes(stream, 3);
 
@@ -184,7 +217,9 @@ namespace ExifLibrary
                     {
                         // unkown extension block
                         var block = new GIFExtensionBlock(label);
+
                         block.Data = ReadDataBlock(stream);
+
                         Blocks.Add(block);
                     }
                 }
@@ -269,12 +304,14 @@ namespace ExifLibrary
         protected byte[,] ReadColorTable(MemoryStream stream, int length)
         {
             var table = new byte[length, 3];
+
             for (int i = 0; i < length; i++)
             {
                 table[i, 0] = (byte)stream.ReadByte();
                 table[i, 1] = (byte)stream.ReadByte();
                 table[i, 2] = (byte)stream.ReadByte();
             }
+
             return table;
         }
 
@@ -285,14 +322,21 @@ namespace ExifLibrary
         protected byte[][] ReadDataBlock(MemoryStream stream)
         {
             List<byte[]> data = new List<byte[]>();
+
             while (true)
             {
                 int val = stream.ReadByte();
+
                 if (val == -1 || val == 0)
+                {
                     break;
+                }
+
                 byte count = (byte)val;
+                
                 data.Add(Utility.GetStreamBytes(stream, count));
             }
+
             return data.ToArray();
         }
 
@@ -306,14 +350,19 @@ namespace ExifLibrary
                 var block = Blocks[i];
                 var nextBlock = (i == Blocks.Count - 1 ? null : Blocks[i + 1]);
                 var extension = block as GIFCommentExtension;
+
                 if (extension == null)
+                {
                     continue;
+                }
+
                 using (var memStream = new MemoryStream())
                 {
                     foreach (var subData in extension.Data)
                     {
                         memStream.Write(subData, 0, subData.Length);
                     }
+
                     Properties.Add(new GIFComment(ExifTag.GIFComment, Encoding.ASCII.GetString(memStream.ToArray()), nextBlock));
                 }
             }
@@ -329,6 +378,7 @@ namespace ExifLibrary
             WriteMetadata();
 
             var conv = BitConverterEx.LittleEndian;
+
             stream.Seek(0, SeekOrigin.Begin);
 
             // version
@@ -339,18 +389,26 @@ namespace ExifLibrary
             stream.Write(conv.GetBytes(ScreenHeight), 0, 2);
 
             int val = 0;
+
             // global color table flag in bit 7
             if (HasGCT)
+            {
                 val |= 1 << 7;
+            }
+
             // color resolution in bits 6, 5, 4
             val |= (ColorResolution - 1) << 4;
+
             // global color table sorted flag in bit 3
             if (IsGCTSorted)
+            {
                 val |= 1 << 3;
+            }
+
             // global color table size bits 2, 1, 0
             val |= (SizeOfGCT - 1);
-            stream.WriteByte((byte)val);
 
+            stream.WriteByte((byte)val);
             stream.WriteByte(BackcolorIndex);
             stream.WriteByte(PixelAspectRatio);
 
@@ -367,23 +425,35 @@ namespace ExifLibrary
                 {
                     // image descriptor block
                     var idBlock = block as GIFImageDescriptor;
+
                     stream.Write(conv.GetBytes(idBlock.Left), 0, 2);
                     stream.Write(conv.GetBytes(idBlock.Top), 0, 2);
                     stream.Write(conv.GetBytes(idBlock.Width), 0, 2);
                     stream.Write(conv.GetBytes(idBlock.Height), 0, 2);
 
                     val = 0;
+
                     // local color table flag in bit 7
                     if (idBlock.HasLCT)
+                    {
                         val |= 1 << 7;
+                    }
+
                     // interlaced flag in bit 6
                     if (idBlock.IsInterlaced)
+                    {
                         val |= 1 << 6;
+                    }
+
                     // local color table sorted flag in bit 5
                     if (idBlock.IsLCTSorted)
+                    {
                         val |= 1 << 5;
+                    }
+
                     // reserved value in bits 4, 3
                     val |= idBlock.Reserved << 3;
+
                     // local color table size bits 2, 1, 0
                     val |= (idBlock.SizeOfLCT - 1);
                     stream.WriteByte((byte)val);
@@ -394,6 +464,7 @@ namespace ExifLibrary
                     // raster data
                     stream.WriteByte(idBlock.LZWMinimumCodeSize);
                     WriteDataBlock(stream, idBlock.ImageData);
+
                     // raster data terminator
                     stream.WriteByte(0);
                 }
@@ -416,18 +487,26 @@ namespace ExifLibrary
                         stream.WriteByte(4); // size
 
                         val = 0;
+
                         // reserved value in bits 7, 6, 5
                         val |= (gceBlock.Reserved) << 5;
+
                         // disposal method in bits 4, 3, 2
                         val |= (gceBlock.DisposalMethod) << 2;
+
                         // user input flag in bit 1
                         if (gceBlock.UserInputFlag)
+                        {
                             val |= 1 << 1;
+                        }
+
                         // transparent color flag in bit 0
                         if (gceBlock.TransparentColorFlag)
+                        {
                             val |= 1 << 0;
-                        stream.WriteByte((byte)val);
+                        }
 
+                        stream.WriteByte((byte)val);
                         stream.Write(conv.GetBytes(gceBlock.DelayTime), 0, 2);
                         stream.WriteByte(gceBlock.TransparentColorIndex);
                     }
@@ -513,25 +592,38 @@ namespace ExifLibrary
                 if (prop.Tag == ExifTag.GIFComment)
                 {
                     var gifComment = prop as GIFComment;
+
                     if (gifComment != null)
                     {
                         var block = new GIFCommentExtension();
                         var interop = gifComment.Interoperability;
+
                         if (interop.Count == 0)
+                        {
                             continue;
+                        }
+
                         var subBlockCount = (interop.Count - 1) / 255 + 1;
+
                         block.Data = new byte[subBlockCount][];
+
                         int offset = 0;
+
                         for (int i = 0; i < subBlockCount; i++)
                         {
                             int count = Math.Min(255, interop.Data.Length - offset);
+
                             block.Data[i] = new byte[count];
+
                             Array.Copy(interop.Data, offset, block.Data[i], 0, count);
+
                             offset += count;
                         }
 
                         var insertBefore = gifComment.InsertBefore;
+
                         int index = insertBefore == null ? -1 : Blocks.IndexOf(insertBefore);
+
                         if (index == -1)
                         {
                             index = Blocks[Blocks.Count - 1].Separator == GIFSeparator.Terminator ? Blocks.Count - 1 : Blocks.Count;

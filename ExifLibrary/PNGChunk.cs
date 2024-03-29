@@ -37,20 +37,27 @@ namespace ExifLibrary
         /// Determines if this is a critical chunk.
         /// </summary>
         public bool IsCritical
-        { get { return (Type[0] >= 'A') && (Type[0] <= 'Z'); } }
+        {
+            get => (Type[0] >= 'A') && (Type[0] <= 'Z');
+        }
+
 
         /// <summary>
         /// Determines if this is a public chunk.
         /// </summary>
         public bool IsPublic
-        { get { return (Type[1] >= 'A') && (Type[1] <= 'Z'); } }
+        { 
+            get => (Type[1] >= 'A') && (Type[1] <= 'Z'); 
+        }
 
         /// <summary>
         /// Determines if the chunk may be safely copied
         /// regardless of the extent of modifications to the file.
         /// </summary>
         public bool IsSafeToCopy
-        { get { return (Type[3] >= 'a') && (Type[3] <= 'z'); } }
+        { 
+            get => (Type[3] >= 'a') && (Type[3] <= 'z'); 
+        }
 
         /// <summary>
         /// The four character ASCII chunk name/type.
@@ -61,10 +68,7 @@ namespace ExifLibrary
         /// Returns a string representation of the current chunk.
         /// </summary>
         /// <returns>A System.String that represents the current chunk.</returns>
-        public override string ToString()
-        {
-            return string.Format("{0} => Data: {1} bytes, CRC32: {2}", Type, Data.Length, CRC);
-        }
+        public override string ToString() => $"{Type} => Data: {Data.Length} bytes, CRC32: {CRC}";
 
         /// <summary>
         /// Updates the CRC value.

@@ -55,6 +55,7 @@ namespace ExifLibrary
             for (uint i = 0; i < fieldcount; i++)
             {
                 uint fieldoffset = offset + 2 + 12 * i;
+
                 ImageFileDirectoryEntry field = ImageFileDirectoryEntry.FromBytes(data, fieldoffset, byteOrder);
                 ifd.Fields.Add(field);
 
@@ -62,11 +63,15 @@ namespace ExifLibrary
                 if (field.Tag == 273)
                 {
                     int baselen = field.Data.Length / (int)field.Count;
+
                     for (int j = 0; j < field.Count; j++)
                     {
                         byte[] val = new byte[baselen];
+
                         Array.Copy(field.Data, j * baselen, val, 0, baselen);
+
                         uint stripOffset = (field.Type == 3 ? (uint)BitConverter.ToUInt16(val, 0) : BitConverter.ToUInt32(val, 0));
+
                         stripOffsets.Add(stripOffset);
                     }
                 }
@@ -75,11 +80,15 @@ namespace ExifLibrary
                 if (field.Tag == 279)
                 {
                     int baselen = field.Data.Length / (int)field.Count;
+
                     for (int j = 0; j < field.Count; j++)
                     {
                         byte[] val = new byte[baselen];
+
                         Array.Copy(field.Data, j * baselen, val, 0, baselen);
+
                         uint stripLength = (field.Type == 3 ? (uint)BitConverter.ToUInt16(val, 0) : BitConverter.ToUInt32(val, 0));
+
                         stripLengths.Add(stripLength);
                     }
                 }
@@ -87,9 +96,14 @@ namespace ExifLibrary
 
             // Save strips
             if (stripOffsets.Count != stripLengths.Count)
+            {
                 throw new NotValidTIFFileException();
+            }
+
             for (int i = 0; i < stripOffsets.Count; i++)
+            {
                 ifd.Strips.Add(new TIFFStrip(data, stripOffsets[i], stripLengths[i]));
+            }
 
             // Offset to next ifd
             ifd.NextIFDOffset = conv.ToUInt32(data, offset + 2 + 12 * fieldcount);

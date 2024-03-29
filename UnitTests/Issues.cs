@@ -1,7 +1,7 @@
-using System;
-using Xunit;
 using ExifLibrary;
+using System;
 using System.Linq;
+using Xunit;
 
 namespace UnitTests
 {
